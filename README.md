@@ -44,10 +44,11 @@ the backend is swappable without touching the UI.
 | Engine | How to enable | Notes |
 | --- | --- | --- |
 | **Demo** (default) | nothing | Real in-process co-occurrence graph, no keys, offline. |
-| **Cognee Cloud** | `MEMORY_ENGINE=cognee_cloud` + `COGNEE_API_KEY` | Managed memory at `api.cognee.ai`. |
+| **Cognee Cloud** ✅ | `MEMORY_ENGINE=cognee_cloud` + `COGNEE_CLOUD_URL` + `COGNEE_TENANT_ID` + `COGNEE_API_KEY` | **Live** — managed memory on your dedicated tenant instance. |
 | **Cognee (server)** | `MEMORY_ENGINE=cognee` + `COGNEE_BASE_URL` | Any self-hosted Cognee API (plugin's local API is `:8011`). |
 
-Copy `.env.example` → `.env` to configure.
+Copy `.env.example` → `.env` to configure (values come straight from the Cognee
+Cloud dashboard → API Keys → *Connection Details*).
 
 ### Cognee Cloud integration
 
@@ -61,11 +62,14 @@ Copy `.env.example` → `.env` to configure.
 | `recall()`   | `POST /api/v1/recall` (json)        | authoritative search |
 | `ping()`     | `POST /api/v1/recall` (top_k=1)     | health / auth check |
 
-Auth is a single `X-Api-Key` header (sent only to remote targets). When
+Auth uses `X-Api-Key` **and** `X-Tenant-Id` (both sent only to remote targets;
+`certifi` supplies the CA bundle so HTTPS verifies on macOS). When
 `MEMORY_ENGINE=cognee_cloud`, every `add` is persisted + cognified in the cloud
-and every `Ask` is answered by Cognee's `recall`; the local graph stays as the
-live visualization and an offline-safe fallback. Connection status shows in the
-engine badge (`Cognee Cloud ✓` when reachable + authed).
+and every `Ask` is answered by Cognee's `recall` — the response's graph
+`Nodes:/Connections:` are parsed into a clean grounded answer plus a "how it
+connects" view. The local graph stays as the live visualization and an
+offline-safe fallback (used automatically while a fresh write is still
+cognifying). Connection status shows in the engine badge (`Cognee Cloud ✓`).
 
 > **Next:** point at a shared team dataset so every teammate's agent recalls
 > from one graph.

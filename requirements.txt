@@ -3,6 +3,10 @@ fastapi==0.115.6
 uvicorn[standard]==0.34.0
 pydantic==2.10.4
 
+# TLS trust store — required for HTTPS to Cognee Cloud on macOS (system
+# Python often lacks a CA bundle). Used by backend/cognee_cloud.py.
+certifi>=2024.0.0
+
 # Cognee memory engine (optional — the app runs on a built-in demo engine
 # without it). Uncomment to enable real Cognee / Cognee Cloud memory.
 # cognee>=1.0.0

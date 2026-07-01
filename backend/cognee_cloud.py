@@ -43,11 +43,15 @@ def _is_local(url: str) -> bool:
     return host in ("localhost", "127.0.0.1", "::1", "0.0.0.0")
 
 
-def _headers(base_url: str, api_key: str, extra: dict | None = None) -> dict:
+def _headers(base_url: str, api_key: str, tenant_id: str = "", extra: dict | None = None) -> dict:
     h = dict(extra or {})
-    # The cloud key is meaningless to a local server, so only send it remotely.
-    if api_key and not _is_local(base_url):
-        h["X-Api-Key"] = api_key
+    # The cloud credentials are meaningless to a local server, so only send them
+    # to a remote target. Cognee Cloud tenants require BOTH headers.
+    if not _is_local(base_url):
+        if api_key:
+            h["X-Api-Key"] = api_key
+        if tenant_id:
+            h["X-Tenant-Id"] = tenant_id
     return h
 
 
@@ -97,6 +101,7 @@ def remember(
     node_set: str = "",
     background: bool = True,
     timeout: float = 60.0,
+    tenant_id: str = "",
 ) -> dict:
     """POST /api/v1/remember. Returns {ok:True, dataset_id?, ...} or {error,...}."""
     url = base_url.rstrip("/") + "/api/v1/remember"
@@ -109,7 +114,7 @@ def remember(
         filename=f"{(node_set or 'memory')}.txt",
         content=content.encode("utf-8"),
     )
-    headers = _headers(base_url, api_key, {"Content-Type": f"multipart/form-data; boundary={boundary}"})
+    headers = _headers(base_url, api_key, tenant_id, {"Content-Type": f"multipart/form-data; boundary={boundary}"})
     req = urllib.request.Request(url, data=body, headers=headers, method="POST")
 
     raw, err = _request(req, timeout)
@@ -137,13 +142,14 @@ def recall(
     top_k: int = 5,
     scope: str = "auto",
     timeout: float = 20.0,
+    tenant_id: str = "",
 ):
     """POST /api/v1/recall. Returns a list of context items, or an error dict."""
     url = base_url.rstrip("/") + "/api/v1/recall"
     body = {"query": query, "top_k": top_k, "only_context": True, "scope": scope}
     if dataset:
         body["datasets"] = [dataset]
-    headers = _headers(base_url, api_key, {"Content-Type": "application/json"})
+    headers = _headers(base_url, api_key, tenant_id, {"Content-Type": "application/json"})
     req = urllib.request.Request(url, data=json.dumps(body).encode("utf-8"), headers=headers, method="POST")
 
     raw, err = _request(req, timeout)
@@ -158,12 +164,12 @@ def recall(
     return data if isinstance(data, list) else [data]
 
 
-def ping(base_url: str, api_key: str, timeout: float = 6.0) -> dict:
+def ping(base_url: str, api_key: str, timeout: float = 6.0, tenant_id: str = "") -> dict:
     """Lightweight reachability/auth check via a trivial recall.
 
     Returns {reachable: bool, authed: bool, detail: str}.
     """
-    res = recall(base_url, api_key, "ping", top_k=1, timeout=timeout)
+    res = recall(base_url, api_key, "ping", top_k=1, timeout=timeout, tenant_id=tenant_id)
     if isinstance(res, list):
         return {"reachable": True, "authed": True, "detail": "ok"}
     status = res.get("status", 0)
@@ -175,15 +181,64 @@ def ping(base_url: str, api_key: str, timeout: float = 6.0) -> dict:
     return {"reachable": True, "authed": True, "detail": res.get("error", f"http {status}")}
 
 
-def result_to_text(items: list) -> str:
-    """Flatten recall results (strings or dicts) into readable context text."""
-    lines = []
+import re
+
+_NODE_RE = re.compile(r"__node_content_start__\n(.*?)\n__node_content_end__", re.S)
+_CONN_RE = re.compile(r"^(.*?)\s--\[([^\]]+)\]-->\s(.*?)(?:\s{2,}\(.*)?$")
+
+
+def _clean_label(s: str) -> str:
+    # Cognee appends a bracketed keyword list to node labels; drop it + url-encoding.
+    s = re.sub(r"\s*\[[^\]]*\]\s*$", "", s).strip()
+    return s.replace("%3A", ":")
+
+
+def format_recall(items: list) -> dict:
+    """Turn Cognee recall results into {facts:[...], connections:[(a,rel,b)...]}.
+
+    Cognee's GRAPH_COMPLETION `text` is a "Nodes:/Connections:" dump. We pull the
+    human-readable node contents as grounded facts and the edges as connections,
+    so the UI can show a clean answer *and* surface the graph relationships.
+    Returns empty lists when nothing is cognified yet (guards the async gap).
+    """
+    facts: list[str] = []
+    connections: list[tuple] = []
     for it in items:
-        if isinstance(it, str):
-            lines.append(it.strip())
-        elif isinstance(it, dict):
-            txt = it.get("text") or it.get("content") or it.get("value") or it.get("name")
-            lines.append(str(txt).strip() if txt else json.dumps(it)[:200])
+        text = it.get("text", "") if isinstance(it, dict) else str(it)
+        if not text or not text.strip():
+            continue
+        node_blocks = _NODE_RE.findall(text)
+        if node_blocks:
+            for b in node_blocks:
+                b = b.strip()
+                if b and b.lower() != "none" and len(b) > 3:
+                    facts.append(b)
+            after = re.split(r"\nConnections:\n", text, maxsplit=1)
+            if len(after) > 1:
+                for line in after[1].splitlines():
+                    m = _CONN_RE.match(line.strip())
+                    if m:
+                        connections.append((_clean_label(m.group(1)), m.group(2), _clean_label(m.group(3))))
         else:
-            lines.append(str(it))
-    return "\n".join(f"• {ln}" for ln in lines if ln)
+            facts.append(text.strip())  # plain (non-graph) result
+
+    # de-dupe, keep order
+    facts = list(dict.fromkeys(facts))
+    seen, conns = set(), []
+    for c in connections:
+        if c not in seen:
+            seen.add(c)
+            conns.append(c)
+    return {"facts": facts, "connections": conns}
+
+
+def result_to_text(items: list) -> str:
+    """Readable rendering of recall results (facts + a few graph connections)."""
+    parsed = format_recall(items)
+    out = [f"• {f}" for f in parsed["facts"]]
+    if parsed["connections"]:
+        out.append("")
+        out.append("How it connects:")
+        for a, rel, b in parsed["connections"][:6]:
+            out.append(f"  {a} —[{rel}]→ {b}")
+    return "\n".join(out).strip()

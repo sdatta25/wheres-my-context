@@ -37,10 +37,29 @@ def test_helpers():
     check("multipart has field", b'name="datasetName"' in body and b"atlas" in body)
     check("multipart has file", b'filename="m.txt"' in body and b"hi" in body)
 
-    txt = cc.result_to_text(["alpha", {"text": "beta"}, {"name": "gamma"}])
+    txt = cc.result_to_text(["alpha", {"text": "beta"}, {"name": "ignored"}])
     check("flatten strings", "• alpha" in txt)
     check("flatten dict.text", "• beta" in txt)
-    check("flatten dict.name", "• gamma" in txt)
+    check("skip dict without text", "ignored" not in txt)
+
+
+def test_graph_parse():
+    print("parse Cognee GRAPH_COMPLETION dump")
+    dump = {
+        "text": (
+            "Nodes:\n"
+            "Node: The passphrase is X [secret, key]\n"
+            "__node_content_start__\nThe passphrase is PURPLE-OTTER-42.\n__node_content_end__\n\n"
+            "Node: wmc%3Afact\n__node_content_start__\nNone\n__node_content_end__\n\n"
+            "Connections:\n"
+            "purple-otter-42 --[is_a]--> passphrase  (purple-otter-42 is a passphrase.)\n"
+        )
+    }
+    parsed = cc.format_recall([dump])
+    check("extracts node content as fact", "The passphrase is PURPLE-OTTER-42." in parsed["facts"])
+    check("drops None node content", not any(f.lower() == "none" for f in parsed["facts"]))
+    check("parses connection edge", ("purple-otter-42", "is_a", "passphrase") in parsed["connections"])
+    check("empty text yields nothing", cc.format_recall([{"text": ""}])["facts"] == [])
 
 
 def test_unreachable_client():
@@ -95,6 +114,6 @@ def test_factory():
 
 
 if __name__ == "__main__":
-    for t in (test_helpers, test_unreachable_client, test_engine_fallback, test_factory):
+    for t in (test_helpers, test_graph_parse, test_unreachable_client, test_engine_fallback, test_factory):
         t()
     print("\nAll Cognee Cloud integration tests passed ✓")

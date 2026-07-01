@@ -37,5 +37,7 @@ SEED = [
 
 
 def load_into(engine):
+    # seed_add populates the local graph only (cloud engines skip the network),
+    # so demo data never triggers cognify cost/duplication on every restart.
     for project, mtype, text in SEED:
-        engine.add(text, type=mtype, project=project)
+        engine.seed_add(text, type=mtype, project=project)

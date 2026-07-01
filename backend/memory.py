@@ -191,6 +191,11 @@ class DemoEngine(MemoryEngine):
             self._mems[m.id] = m
             return m.to_dict()
 
+    def seed_add(self, text: str, type: str = "note", project: str = "default") -> dict:
+        """Populate the local graph only (used for boot seed data). For the demo
+        engine this is just add; cloud engines override it to skip the network."""
+        return self.add(text, type, project)
+
     def delete(self, memory_id: str) -> bool:
         with self._lock:
             return self._mems.pop(memory_id, None) is not None
@@ -356,19 +361,25 @@ class CogneeHttpEngine(DemoEngine):
     label = "Cognee Cloud"
     online = True
 
-    def __init__(self, base_url: str, api_key: str, label: str = "Cognee Cloud"):
+    def __init__(self, base_url: str, api_key: str, label: str = "Cognee Cloud", tenant_id: str = ""):
         super().__init__()
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key or ""
+        self.tenant_id = tenant_id or ""
         self.label = label
         self._health = {"reachable": None, "authed": None, "detail": "not checked"}
+        self._health_at = 0.0
 
     # -- helpers ------------------------------------------------------------ #
-    def _check(self) -> dict:
+    def _check(self, ttl: float = 20.0) -> dict:
+        # Cache the ping so /api/status (hit on every UI refresh) stays snappy.
+        if time.time() - self._health_at < ttl and self._health.get("reachable") is not None:
+            return self._health
         try:
-            self._health = cognee_cloud.ping(self.base_url, self.api_key)
+            self._health = cognee_cloud.ping(self.base_url, self.api_key, tenant_id=self.tenant_id)
         except Exception as e:  # never let a health check break the app
             self._health = {"reachable": False, "authed": False, "detail": str(e)[:120]}
+        self._health_at = time.time()
         return self._health
 
     def status(self) -> dict:
@@ -385,6 +396,11 @@ class CogneeHttpEngine(DemoEngine):
         }
 
     # -- writes ------------------------------------------------------------- #
+    def seed_add(self, text, type="note", project="default"):
+        # Boot seed data goes to the local mirror only — no cloud writes / cognify
+        # cost on every restart. Live user adds still persist to Cognee Cloud.
+        return DemoEngine.add(self, text, type, project)
+
     def add(self, text, type="note", project="default"):
         rec = super().add(text, type, project)  # local mirror first (instant)
         try:
@@ -392,7 +408,7 @@ class CogneeHttpEngine(DemoEngine):
             res = cognee_cloud.remember(
                 self.base_url, self.api_key, text,
                 dataset=project, node_set=f"{project}:{type}",
-                background=True,
+                background=True, tenant_id=self.tenant_id,
             )
             rec["cognee"] = res
         except Exception as e:
@@ -404,21 +420,21 @@ class CogneeHttpEngine(DemoEngine):
         base = super().search(query, project)  # local answer + graph path/sources
         dataset = "" if (not project or project == "all") else project
         try:
-            results = cognee_cloud.recall(self.base_url, self.api_key, query, dataset=dataset)
+            results = cognee_cloud.recall(self.base_url, self.api_key, query, dataset=dataset, tenant_id=self.tenant_id)
         except Exception as e:
             results = {"error": str(e)[:160]}
 
-        if isinstance(results, list) and results:
-            ctx = cognee_cloud.result_to_text(results)
-            base["answer"] = (
-                f"**Cognee Cloud** recalled this for “{query}”:\n\n{ctx}"
-            )
+        ctx = cognee_cloud.result_to_text(results) if isinstance(results, list) else ""
+        if ctx.strip():
+            base["answer"] = f"**Cognee Cloud** recalled this for “{query}”:\n\n{ctx}"
             base["source_engine"] = "cognee_cloud"
         else:
-            # Empty (not yet cognified) or error → keep the local mirror's answer.
+            # Empty / not-yet-cognified / error → keep the local mirror's answer.
             base["source_engine"] = "local_mirror"
             if isinstance(results, dict) and results.get("error"):
                 base["cognee_note"] = results["error"]
+            elif isinstance(results, list) and results:
+                base["cognee_note"] = "cognify in progress — showing local mirror"
         return base
 
 
@@ -434,15 +450,17 @@ def build_engine() -> MemoryEngine:
     def _cloud_url(default: str) -> str:
         return os.getenv("COGNEE_CLOUD_URL") or os.getenv("COGNEE_BASE_URL") or default
 
+    tenant = os.getenv("COGNEE_TENANT_ID", "")
+
     if choice in ("cognee_cloud", "cloud"):
         base = _cloud_url("https://api.cognee.ai")
         key = os.getenv("COGNEE_API_KEY", "")
-        return CogneeHttpEngine(base, key, label="Cognee Cloud")
+        return CogneeHttpEngine(base, key, label="Cognee Cloud", tenant_id=tenant)
 
     if choice in ("cognee", "server"):
         # Self-hosted Cognee server (the plugin's local API defaults to :8011).
         base = _cloud_url("http://localhost:8011")
         key = os.getenv("COGNEE_API_KEY", "")
-        return CogneeHttpEngine(base, key, label="Cognee (server)")
+        return CogneeHttpEngine(base, key, label="Cognee (server)", tenant_id=tenant)
 
     return DemoEngine()
