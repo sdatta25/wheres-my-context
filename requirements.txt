@@ -1,0 +1,8 @@
+# Web framework
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+
+# Cognee memory engine (optional — the app runs on a built-in demo engine
+# without it). Uncomment to enable real Cognee / Cognee Cloud memory.
+# cognee>=1.0.0

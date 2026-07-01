@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Where's My Context · AI memory that connects</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">◒</div>
+      <div>
+        <h1>Where's My Context<span class="dot">.</span></h1>
+        <p class="tag">Persistent AI memory that <em>connects</em> your context — powered by a knowledge graph.</p>
+      </div>
+    </div>
+    <div class="controls">
+      <span id="engine-badge" class="badge" title="Active memory engine">…</span>
+      <label class="proj">
+        Project
+        <select id="project-select"></select>
+      </label>
+      <button id="seed-btn" class="ghost" title="Load demo data">Seed demo</button>
+      <button id="reset-btn" class="ghost danger" title="Clear this project">Reset</button>
+    </div>
+  </header>
+
+  <main class="grid">
+    <!-- LEFT: feed the brain -->
+    <section class="panel left">
+      <h2>Feed your brain</h2>
+      <form id="add-form" class="add">
+        <textarea id="add-text" rows="3"
+          placeholder="Drop a note, a decision, a fact… e.g. 'We chose Postgres over Mongo because billing needs relational integrity.'"></textarea>
+        <div class="row">
+          <select id="add-type">
+            <option value="decision">🧭 decision</option>
+            <option value="note" selected>📝 note</option>
+            <option value="fact">📌 fact</option>
+            <option value="doc">📄 doc</option>
+            <option value="code">💻 code</option>
+          </select>
+          <button type="submit" class="primary">Remember</button>
+        </div>
+      </form>
+      <div class="mem-head">
+        <h3>Memories <span id="mem-count" class="pill">0</span></h3>
+      </div>
+      <div id="mem-list" class="mem-list"></div>
+    </section>
+
+    <!-- CENTER: the knowledge graph -->
+    <section class="panel center">
+      <div class="center-head">
+        <h2>Knowledge graph</h2>
+        <div class="legend">
+          <span><i class="sw mem"></i> memory</span>
+          <span><i class="sw con"></i> concept</span>
+          <span class="hint">click a node to trace context</span>
+        </div>
+      </div>
+      <svg id="graph"></svg>
+      <div id="graph-empty" class="graph-empty hidden">No memories yet — add one on the left.</div>
+    </section>
+
+    <!-- RIGHT: ask / recall -->
+    <section class="panel right">
+      <h2>Ask your memory</h2>
+      <form id="ask-form" class="ask">
+        <input id="ask-input" type="text"
+          placeholder="Where's my context on… e.g. 'why Postgres?'" />
+        <button type="submit" class="primary">Ask</button>
+      </form>
+      <div id="chat" class="chat"></div>
+
+      <div class="recall-card">
+        <h3>🤖 New AI session</h3>
+        <p class="muted">See exactly what context an agent gets injected when it wakes up on this project.</p>
+        <div class="row">
+          <input id="recall-task" type="text" placeholder="optional task, e.g. 'add refunds'" />
+          <button id="recall-btn" class="accent">Recall</button>
+        </div>
+        <pre id="recall-out" class="recall-out hidden"></pre>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

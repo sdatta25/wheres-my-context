@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Env / secrets
+.env
+.env.local
+
+# Cognee local stores
+.cognee_system/
+.data_storage/
+cognee/
+
+# App data
+data/*.json
+!data/.gitkeep
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.log
