@@ -7,8 +7,10 @@ Cognee Cloud. Swapping engines is a matter of environment variables.
 
     DemoEngine        — zero dependencies, builds a real co-occurrence knowledge
                         graph in-process. Great for demos and offline dev.
-    CogneeEngine      — self-hosted Cognee (`pip install cognee`, LLM_API_KEY).
-    CogneeCloudEngine — Cognee Cloud managed memory (COGNEE_API_KEY).
+    CogneeHttpEngine  — talks to Cognee Cloud (or any Cognee server) over the
+                        memory-native REST API (/remember, /recall). Keeps the
+                        Demo graph as a local mirror for the live visualization
+                        and as a graceful fallback if the backend is down.
 
 Every engine returns the same shapes:
 
@@ -25,6 +27,8 @@ import uuid
 import threading
 from dataclasses import dataclass, field, asdict
 from typing import Optional
+
+from . import cognee_cloud
 
 
 # --------------------------------------------------------------------------- #
@@ -335,69 +339,87 @@ class DemoEngine(MemoryEngine):
 
 
 # --------------------------------------------------------------------------- #
-#  Cognee engines (used when configured). Kept import-safe.
+#  Cognee engine — real memory over the Cognee REST API (cloud or server)
 # --------------------------------------------------------------------------- #
 
-class CogneeEngine(DemoEngine):
-    """Self-hosted Cognee. Inherits the graph/search *shaping* from DemoEngine
-    but persists + cognifies through the real Cognee SDK when available.
+class CogneeHttpEngine(DemoEngine):
+    """Persists to Cognee Cloud (or any Cognee server) via /remember + /recall,
+    while keeping the in-process Demo graph as a local mirror.
 
-    We deliberately keep the local mirror in sync so the graph visualization is
-    instant and the app degrades gracefully if a cognify call is slow. The
-    authoritative answer for `search` comes from Cognee when it's importable.
+    Why a mirror? Cognee owns the authoritative memory + cognified graph, but the
+    REST API doesn't hand back node/edge ids that map onto our force-graph. So the
+    mirror drives the *visualization* and gives an instant, offline-safe fallback,
+    and Cognee provides the authoritative recall answer. Exactly the hybrid the
+    official Claude Code plugin uses (server-first, local as degraded path).
     """
-    name = "cognee"
-    label = "Cognee (self-hosted)"
-    online = True
-
-    def __init__(self):
-        super().__init__()
-        try:
-            import cognee  # noqa: F401
-            self._cognee = cognee
-        except Exception:  # pragma: no cover - only when SDK missing
-            self._cognee = None
-
-    def add(self, text, type="note", project="default"):
-        rec = super().add(text, type, project)
-        if self._cognee is not None:
-            try:
-                import asyncio
-                async def _ingest():
-                    await self._cognee.add(text, dataset_name=project)
-                    await self._cognee.cognify(datasets=[project])
-                asyncio.run(_ingest())
-            except Exception:
-                pass  # keep local mirror authoritative on failure
-        return rec
-
-    def search(self, query, project=None):
-        if self._cognee is not None:
-            try:
-                import asyncio
-                async def _q():
-                    return await self._cognee.search(query)
-                results = asyncio.run(_q())
-                base = super().search(query, project)
-                if results:
-                    base["answer"] = str(results if isinstance(results, str) else
-                                         "\n".join(map(str, results)))
-                return base
-            except Exception:
-                pass
-        return super().search(query, project)
-
-
-class CogneeCloudEngine(CogneeEngine):
-    """Cognee Cloud (managed). Same behavior; talks to api.cognee.ai."""
     name = "cognee_cloud"
     label = "Cognee Cloud"
     online = True
 
-    def __init__(self):
+    def __init__(self, base_url: str, api_key: str, label: str = "Cognee Cloud"):
         super().__init__()
-        self.base_url = os.getenv("COGNEE_BASE_URL", "https://api.cognee.ai")
-        self.api_key = os.getenv("COGNEE_API_KEY", "")
+        self.base_url = base_url.rstrip("/")
+        self.api_key = api_key or ""
+        self.label = label
+        self._health = {"reachable": None, "authed": None, "detail": "not checked"}
+
+    # -- helpers ------------------------------------------------------------ #
+    def _check(self) -> dict:
+        try:
+            self._health = cognee_cloud.ping(self.base_url, self.api_key)
+        except Exception as e:  # never let a health check break the app
+            self._health = {"reachable": False, "authed": False, "detail": str(e)[:120]}
+        return self._health
+
+    def status(self) -> dict:
+        h = self._check()
+        connected = bool(h.get("reachable"))
+        return {
+            "engine": self.name,
+            "label": self.label + (" ✓" if connected and h.get("authed") else " (offline)"),
+            "online": True,
+            "connected": connected,
+            "authed": bool(h.get("authed")),
+            "base_url": self.base_url,
+            "detail": h.get("detail"),
+        }
+
+    # -- writes ------------------------------------------------------------- #
+    def add(self, text, type="note", project="default"):
+        rec = super().add(text, type, project)  # local mirror first (instant)
+        try:
+            # Tag the node_set with the memory type so it survives into the graph.
+            res = cognee_cloud.remember(
+                self.base_url, self.api_key, text,
+                dataset=project, node_set=f"{project}:{type}",
+                background=True,
+            )
+            rec["cognee"] = res
+        except Exception as e:
+            rec["cognee"] = {"error": str(e)[:160]}
+        return rec
+
+    # -- reads -------------------------------------------------------------- #
+    def search(self, query, project=None):
+        base = super().search(query, project)  # local answer + graph path/sources
+        dataset = "" if (not project or project == "all") else project
+        try:
+            results = cognee_cloud.recall(self.base_url, self.api_key, query, dataset=dataset)
+        except Exception as e:
+            results = {"error": str(e)[:160]}
+
+        if isinstance(results, list) and results:
+            ctx = cognee_cloud.result_to_text(results)
+            base["answer"] = (
+                f"**Cognee Cloud** recalled this for “{query}”:\n\n{ctx}"
+            )
+            base["source_engine"] = "cognee_cloud"
+        else:
+            # Empty (not yet cognified) or error → keep the local mirror's answer.
+            base["source_engine"] = "local_mirror"
+            if isinstance(results, dict) and results.get("error"):
+                base["cognee_note"] = results["error"]
+        return base
 
 
 # --------------------------------------------------------------------------- #
@@ -406,8 +428,16 @@ class CogneeCloudEngine(CogneeEngine):
 
 def build_engine() -> MemoryEngine:
     choice = os.getenv("MEMORY_ENGINE", "").strip().lower()
-    if choice == "cognee":
-        return CogneeEngine()
+
     if choice in ("cognee_cloud", "cloud"):
-        return CogneeCloudEngine()
+        base = os.getenv("COGNEE_BASE_URL", "https://api.cognee.ai")
+        key = os.getenv("COGNEE_API_KEY", "")
+        return CogneeHttpEngine(base, key, label="Cognee Cloud")
+
+    if choice in ("cognee", "server"):
+        # Self-hosted Cognee server (the plugin's local API defaults to :8011).
+        base = os.getenv("COGNEE_BASE_URL", "http://localhost:8011")
+        key = os.getenv("COGNEE_API_KEY", "")
+        return CogneeHttpEngine(base, key, label="Cognee (server)")
+
     return DemoEngine()

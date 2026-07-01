@@ -44,15 +44,31 @@ the backend is swappable without touching the UI.
 | Engine | How to enable | Notes |
 | --- | --- | --- |
 | **Demo** (default) | nothing | Real in-process co-occurrence graph, no keys, offline. |
-| **Cognee** (self-hosted) | `MEMORY_ENGINE=cognee` + `LLM_API_KEY` + `pip install cognee` | Persists + `cognify()`s through the real SDK. |
 | **Cognee Cloud** | `MEMORY_ENGINE=cognee_cloud` + `COGNEE_API_KEY` | Managed memory at `api.cognee.ai`. |
+| **Cognee (server)** | `MEMORY_ENGINE=cognee` + `COGNEE_BASE_URL` | Any self-hosted Cognee API (plugin's local API is `:8011`). |
 
-Copy `.env.example` → `.env` to configure. See the
-[Cognee docs](https://docs.cognee.ai) — the core loop is
-`add()` → `cognify()` → `search()`.
+Copy `.env.example` → `.env` to configure.
 
-> **Roadmap:** wire the Cognee Cloud path end-to-end so memory persists across
-> deploys and every teammate's agent shares one graph.
+### Cognee Cloud integration
+
+`backend/cognee_cloud.py` is a small, stdlib-only client that speaks Cognee's
+**memory-native REST API** — the exact contract used by Cognee's
+[official Claude Code plugin](https://github.com/topoteretes/cognee-integrations):
+
+| Call | Endpoint | Used for |
+| --- | --- | --- |
+| `remember()` | `POST /api/v1/remember` (multipart) | add **+** cognify in one call |
+| `recall()`   | `POST /api/v1/recall` (json)        | authoritative search |
+| `ping()`     | `POST /api/v1/recall` (top_k=1)     | health / auth check |
+
+Auth is a single `X-Api-Key` header (sent only to remote targets). When
+`MEMORY_ENGINE=cognee_cloud`, every `add` is persisted + cognified in the cloud
+and every `Ask` is answered by Cognee's `recall`; the local graph stays as the
+live visualization and an offline-safe fallback. Connection status shows in the
+engine badge (`Cognee Cloud ✓` when reachable + authed).
+
+> **Next:** point at a shared team dataset so every teammate's agent recalls
+> from one graph.
 
 ## 🏗 Architecture
 
