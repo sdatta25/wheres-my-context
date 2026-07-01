@@ -25,6 +25,10 @@ onto **Cognee** / **Cognee Cloud** by flipping two environment variables.
   the connecting concepts, and light up the exact path in the graph.
 - **Forgets vs. remembers** — a compare toggle shows a no-memory LLM's blank
   stare next to Cognee's grounded answer, side by side.
+- **Shared team brain** — set who you are; every memory records its contributor,
+  people become nodes wired to what they added, and attribution is baked into the
+  cognified graph so *"who set up the GraphQL gateway?"* returns the right teammate.
+  Everyone on the same Cognee tenant reads and writes one graph.
 - **New AI session recall** — simulate the context brief an agent receives when
   it wakes up on a project (the literal answer to *"where's my context?"*).
 
@@ -37,10 +41,13 @@ onto **Cognee** / **Cognee Cloud** by flipping two environment variables.
    in the Ask panel. Ask *"why did we pick Postgres?"* → the **❌ Generic LLM**
    bubble admits it has no memory; the **✅ With Cognee** bubble answers with the
    real decision *and* shows how concepts connect. That contrast is the whole pitch.
-2. **Watch memory form (30s).** In **Feed your brain**, add a decision, e.g.
-   *"We're moving auth to Auth0 next sprint; Sarah leads it."* The **knowledge
-   graph** grows instantly (new concept nodes wire in), and the badge shows
-   **`Cognee Cloud ✓`** — it just persisted + cognified on a live Cognee tenant.
+2. **Watch memory form (30s).** Set *Adding as* to your name. In **Feed your
+   brain**, add a decision, e.g. *"We're moving auth to Auth0 next sprint; Sarah
+   leads it."* The **knowledge graph** grows instantly — a new **person node**
+   (you) wires to the memory, plus concept nodes — and the badge shows
+   **`Cognee Cloud ✓`**: it just persisted + cognified on a live Cognee tenant.
+   Point out the orange contributor nodes: this is a **shared team brain**.
+   Ask *"who set up X?"* → Cognee names the teammate who added it.
 3. **Recall it (30s).** Ask *"what's changing with auth and who owns it?"* → a
    grounded answer sourced from Cognee's graph, tracing the path in the viz.
 4. **"Where's my context?" (30s).** Hit **Recall** under *New AI session* → see

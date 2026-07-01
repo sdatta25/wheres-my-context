@@ -136,6 +136,7 @@ class Memory:
     text: str
     type: str = "note"                 # note | decision | doc | code | fact
     project: str = "default"
+    author: str = ""                   # who contributed it (the team-brain angle)
     id: str = field(default_factory=lambda: uuid.uuid4().hex[:12])
     created_at: float = field(default_factory=time.time)
     terms: list[str] = field(default_factory=list)
@@ -155,7 +156,7 @@ class MemoryEngine:
     label = "Base"
     online = False  # whether it talks to a real Cognee backend
 
-    def add(self, text: str, type: str = "note", project: str = "default") -> dict: ...
+    def add(self, text: str, type: str = "note", project: str = "default", author: str = "") -> dict: ...
     def list(self, project: Optional[str] = None) -> list[dict]: ...
     def delete(self, memory_id: str) -> bool: ...
     def graph(self, project: Optional[str] = None) -> dict: ...
@@ -181,20 +182,21 @@ class DemoEngine(MemoryEngine):
         self._mems: dict[str, Memory] = {}
 
     # -- writes ------------------------------------------------------------- #
-    def add(self, text: str, type: str = "note", project: str = "default") -> dict:
+    def add(self, text: str, type: str = "note", project: str = "default", author: str = "") -> dict:
         text = (text or "").strip()
         if not text:
             raise ValueError("empty memory")
         with self._lock:
-            m = Memory(text=text, type=type or "note", project=project or "default")
+            m = Memory(text=text, type=type or "note", project=project or "default",
+                       author=(author or "").strip())
             m.terms = extract_terms(text)
             self._mems[m.id] = m
             return m.to_dict()
 
-    def seed_add(self, text: str, type: str = "note", project: str = "default") -> dict:
+    def seed_add(self, text: str, type: str = "note", project: str = "default", author: str = "") -> dict:
         """Populate the local graph only (used for boot seed data). For the demo
         engine this is just add; cloud engines override it to skip the network."""
-        return self.add(text, type, project)
+        return self.add(text, type, project, author)
 
     def delete(self, memory_id: str) -> bool:
         with self._lock:
@@ -226,10 +228,13 @@ class DemoEngine(MemoryEngine):
         nodes: dict[str, dict] = {}
         links: list[dict] = []
         ent_count: dict[str, int] = {}
+        author_count: dict[str, int] = {}
 
         for m in mems:
             for t in m.terms:
                 ent_count[_canon(t)] = ent_count.get(_canon(t), 0) + 1
+            if m.author:
+                author_count[m.author] = author_count.get(m.author, 0) + 1
 
         for m in mems:
             nid = f"m:{m.id}"
@@ -238,8 +243,20 @@ class DemoEngine(MemoryEngine):
                 "label": (m.text[:42] + "…") if len(m.text) > 42 else m.text,
                 "kind": "memory",
                 "mtype": m.type,
+                "author": m.author,
                 "size": 10,
             }
+            # contributor (person) node → the team-brain: who added what
+            if m.author:
+                pid = f"p:{m.author}"
+                if pid not in nodes:
+                    nodes[pid] = {
+                        "id": pid,
+                        "label": m.author,
+                        "kind": "person",
+                        "size": 9 + 2 * author_count.get(m.author, 1),
+                    }
+                links.append({"source": pid, "target": nid, "kind": "by"})
             canon_terms = []
             for t in m.terms:
                 key = _canon(t)
@@ -411,17 +428,19 @@ class CogneeHttpEngine(DemoEngine):
         return [self._ds(p) for p in self.projects()]
 
     # -- writes ------------------------------------------------------------- #
-    def seed_add(self, text, type="note", project="default"):
+    def seed_add(self, text, type="note", project="default", author=""):
         # Boot seed data goes to the local mirror only — no cloud writes / cognify
         # cost on every restart. Live user adds still persist to Cognee Cloud.
-        return DemoEngine.add(self, text, type, project)
+        return DemoEngine.add(self, text, type, project, author)
 
-    def add(self, text, type="note", project="default"):
-        rec = super().add(text, type, project)  # local mirror first (instant)
+    def add(self, text, type="note", project="default", author=""):
+        rec = super().add(text, type, project, author)  # local mirror first (instant)
         try:
-            # Tag the node_set with the memory type so it survives into the graph.
+            # Bake the contributor into the cognified text so Cognee's graph links
+            # people ↔ knowledge — enables team queries like "who knows about auth?".
+            content = f"[Contributed by {author}] {text}" if author else text
             res = cognee_cloud.remember(
-                self.base_url, self.api_key, text,
+                self.base_url, self.api_key, content,
                 dataset=self._ds(project), node_set=f"{project}:{type}",
                 background=True, tenant_id=self.tenant_id,
             )

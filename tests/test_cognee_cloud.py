@@ -79,15 +79,22 @@ def test_engine_fallback():
     print("engine graceful fallback")
     eng = CogneeHttpEngine(DEAD, "ck_x", label="Cognee Cloud")
     # seed a couple memories — local mirror must still work fully
-    rec = eng.add("We chose Postgres over Mongo for billing integrity.", "decision", "atlas")
-    eng.add("Sarah owns the Stripe billing webhook.", "note", "atlas")
+    rec = eng.add("We chose Postgres over Mongo for billing integrity.", "decision", "atlas", author="Karam")
+    eng.add("Sarah owns the Stripe billing webhook.", "note", "atlas", author="Sripad")
 
     mems = eng.list("atlas")
     check("add kept local mirror", len(mems) == 2)
     check("add attempted cognee write", "cognee" in rec and "error" in rec["cognee"])
+    check("author recorded on memory", any(m.get("author") == "Karam" for m in mems))
 
     g = eng.graph("atlas")
     check("graph has nodes", len(g["nodes"]) > 2)
+    person_nodes = [n for n in g["nodes"] if n["kind"] == "person"]
+    check("graph has person nodes", {n["label"] for n in person_nodes} == {"Karam", "Sripad"})
+    check("graph links person→memory", any(l["kind"] == "by" for l in g["links"]))
+
+    # scoping helper namespaces per project
+    check("dataset namespaced", eng._ds("atlas") == "wmc_atlas")
 
     res = eng.search("why postgres?", "atlas")
     check("search still answers via mirror", bool(res["answer"]))

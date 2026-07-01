@@ -61,6 +61,7 @@ class AddReq(BaseModel):
     text: str
     type: str = "note"
     project: str = "default"
+    author: str = ""
 
 
 class SearchReq(BaseModel):
@@ -91,7 +92,7 @@ def list_memories(project: str | None = None):
 @app.post("/api/memories")
 def add_memory(req: AddReq):
     try:
-        mem = engine.add(req.text, req.type, req.project)
+        mem = engine.add(req.text, req.type, req.project, req.author)
     except ValueError as e:
         raise HTTPException(400, str(e))
     return {"memory": mem}

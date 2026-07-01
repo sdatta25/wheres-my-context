@@ -32,6 +32,11 @@
     <!-- LEFT: feed the brain -->
     <section class="panel left">
       <h2>Feed your brain</h2>
+      <div class="identity-row">
+        <span>🧑‍💻 Adding as</span>
+        <input id="identity" type="text" placeholder="your name" maxlength="24" />
+        <span class="idhint">shared team brain</span>
+      </div>
       <form id="add-form" class="add">
         <textarea id="add-text" rows="3"
           placeholder="Drop a note, a decision, a fact… e.g. 'We chose Postgres over Mongo because billing needs relational integrity.'"></textarea>
@@ -59,6 +64,7 @@
         <div class="legend">
           <span><i class="sw mem"></i> memory</span>
           <span><i class="sw con"></i> concept</span>
+          <span><i class="sw per"></i> person</span>
           <span class="hint">click a node to trace context</span>
         </div>
       </div>

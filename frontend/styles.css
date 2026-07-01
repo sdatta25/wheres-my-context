@@ -11,6 +11,7 @@
   --accent-3: #ff8fcf;
   --mem: #4de1c1;
   --con: #7c6cff;
+  --per: #ffb057;
   --danger: #ff6b7d;
   --shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
   --radius: 14px;
@@ -101,6 +102,10 @@ button:active { transform: translateY(1px); }
 .panel h3 { margin: 0; font-size: 12.5px; font-weight: 600; color: var(--muted); }
 
 /* ---------- left: add + list ---------- */
+.identity-row { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--muted); margin-bottom: 9px; }
+.identity-row input { flex: 0 1 120px; padding: 5px 8px; font-size: 12px; }
+.identity-row .idhint { margin-left: auto; font-size: 10px; color: var(--per); background: rgba(255,176,87,.12); border: 1px solid rgba(255,176,87,.3); padding: 2px 7px; border-radius: 999px; }
+
 .add textarea { width: 100%; resize: vertical; line-height: 1.45; }
 .add .row { display: flex; gap: 8px; margin-top: 8px; }
 .add .row select { flex: 1; }
@@ -121,6 +126,7 @@ button:active { transform: translateY(1px); }
 .mem-item .mtype.decision { color: var(--accent); }
 .mem-item .mtype.code { color: var(--accent-3); }
 .mem-item .txt { margin-top: 3px; color: var(--text); }
+.mem-item .by { color: var(--per); font-weight: 600; }
 .mem-item .del { position: absolute; top: 6px; right: 7px; opacity: 0; color: var(--muted); background: none; border: none; padding: 2px 6px; font-size: 14px; }
 .mem-item:hover .del { opacity: 1; }
 .mem-item .del:hover { color: var(--danger); }
@@ -132,6 +138,7 @@ button:active { transform: translateY(1px); }
 .legend .sw { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
 .legend .sw.mem { background: var(--mem); }
 .legend .sw.con { background: var(--con); }
+.legend .sw.per { background: var(--per); }
 .legend .hint { font-style: italic; opacity: .8; }
 #graph { flex: 1; width: 100%; min-height: 0; }
 .graph-empty { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-size: 13px; }
@@ -139,6 +146,7 @@ button:active { transform: translateY(1px); }
 
 .node-label { font-size: 10px; fill: var(--text); pointer-events: none; font-family: "Inter", sans-serif; }
 .node-label.concept { fill: #c8c2ff; font-weight: 600; }
+.node-label.person { fill: var(--per); font-weight: 700; }
 .link { stroke: rgba(140, 155, 210, 0.22); }
 .link.related { stroke: rgba(124, 108, 255, 0.28); stroke-dasharray: 3 3; }
 .node circle { cursor: pointer; transition: opacity .15s ease; }

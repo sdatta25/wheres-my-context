@@ -43,9 +43,10 @@ async function loadMemories() {
     const el = document.createElement("div");
     el.className = "mem-item";
     el.dataset.id = m.id;
+    const by = m.author ? ` · <span class="by">${escapeHtml(m.author)}</span>` : "";
     el.innerHTML = `
       <button class="del" title="Forget">×</button>
-      <span class="mtype ${m.type}">${typeEmoji[m.type] || "•"} ${m.type} · ${m.project}</span>
+      <span class="mtype ${m.type}">${typeEmoji[m.type] || "•"} ${m.type} · ${m.project}${by}</span>
       <div class="txt">${escapeHtml(m.text)}</div>`;
     el.querySelector(".del").addEventListener("click", async (e) => {
       e.stopPropagation();
@@ -121,10 +122,15 @@ function drawGraph() {
     .append("g")
     .attr("class", "node")
     .call(drag());
+  const nodeColor = { memory: "var(--mem)", concept: "var(--con)", person: "var(--per)" };
+  const nodeRadius = (d) =>
+    d.kind === "memory" ? 8
+      : d.kind === "person" ? Math.min(9 + d.size * 0.4, 18)
+      : Math.min(6 + d.size * 0.5, 16);
   nodeEnter
     .append("circle")
-    .attr("r", (d) => (d.kind === "memory" ? 8 : Math.min(6 + d.size * 0.5, 16)))
-    .attr("fill", (d) => (d.kind === "memory" ? "var(--mem)" : "var(--con)"))
+    .attr("r", nodeRadius)
+    .attr("fill", (d) => nodeColor[d.kind] || "var(--con)")
     .attr("stroke", "#0a0e1a")
     .attr("stroke-width", 1.5)
     .on("click", (e, d) => { e.stopPropagation(); highlightNode(d.id); })
@@ -138,9 +144,9 @@ function drawGraph() {
     .enter()
     .append("text")
     .attr("class", (d) => "node-label " + d.kind)
-    .attr("dx", 11)
+    .attr("dx", (d) => (d.kind === "person" ? 13 : 11))
     .attr("dy", 4)
-    .text((d) => (d.kind === "concept" ? d.label : ""))
+    .text((d) => (d.kind === "concept" || d.kind === "person" ? d.label : ""))
     .merge(label);
 
   if (simulation) simulation.stop();
@@ -299,13 +305,20 @@ async function refresh() {
 }
 
 function wire() {
+  // identity for the shared team brain — persisted per browser
+  const idInput = $("#identity");
+  idInput.value = localStorage.getItem("wmc_author") || "You";
+  idInput.addEventListener("change", () => localStorage.setItem("wmc_author", idInput.value.trim() || "You"));
+
   $("#add-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const text = $("#add-text").value.trim();
     if (!text) return;
     const type = $("#add-type").value;
-    const project = state.project === "all" ? "default" : state.project;
-    await api("/api/memories", { method: "POST", body: JSON.stringify({ text, type, project }) });
+    const project = state.project === "all" ? "atlas" : state.project;
+    const author = idInput.value.trim() || "You";
+    localStorage.setItem("wmc_author", author);
+    await api("/api/memories", { method: "POST", body: JSON.stringify({ text, type, project, author }) });
     $("#add-text").value = "";
     await refresh();
   });
