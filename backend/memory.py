@@ -395,6 +395,21 @@ class CogneeHttpEngine(DemoEngine):
             "detail": h.get("detail"),
         }
 
+    # -- helpers ------------------------------------------------------------ #
+    # Namespace our datasets so recall never collides with other tenant data
+    # (e.g. the Claude Code plugin's `agent_sessions`).
+    _DS_PREFIX = "wmc_"
+
+    def _ds(self, project: str) -> str:
+        return f"{self._DS_PREFIX}{project or 'default'}"
+
+    def _scoped_datasets(self, project) -> list:
+        """Which cloud datasets a search should span: one project, or all of
+        *our* known projects for the 'all' view — never the whole tenant."""
+        if project and project != "all":
+            return [self._ds(project)]
+        return [self._ds(p) for p in self.projects()]
+
     # -- writes ------------------------------------------------------------- #
     def seed_add(self, text, type="note", project="default"):
         # Boot seed data goes to the local mirror only — no cloud writes / cognify
@@ -407,7 +422,7 @@ class CogneeHttpEngine(DemoEngine):
             # Tag the node_set with the memory type so it survives into the graph.
             res = cognee_cloud.remember(
                 self.base_url, self.api_key, text,
-                dataset=project, node_set=f"{project}:{type}",
+                dataset=self._ds(project), node_set=f"{project}:{type}",
                 background=True, tenant_id=self.tenant_id,
             )
             rec["cognee"] = res
@@ -418,9 +433,15 @@ class CogneeHttpEngine(DemoEngine):
     # -- reads -------------------------------------------------------------- #
     def search(self, query, project=None):
         base = super().search(query, project)  # local answer + graph path/sources
-        dataset = "" if (not project or project == "all") else project
+        datasets = self._scoped_datasets(project)
+        if not datasets:
+            base["source_engine"] = "local_mirror"
+            return base
         try:
-            results = cognee_cloud.recall(self.base_url, self.api_key, query, dataset=dataset, tenant_id=self.tenant_id)
+            results = cognee_cloud.recall(
+                self.base_url, self.api_key, query,
+                datasets=datasets, tenant_id=self.tenant_id,
+            )
         except Exception as e:
             results = {"error": str(e)[:160]}
 

@@ -216,8 +216,8 @@ function clearHighlight() {
 
 /* -------------------------------------------------------------------- chat */
 function addBubble(cls, html) {
-  const empty = $("#chat .empty-chat");
-  if (empty) empty.remove();
+  const intro = $("#chat .intro");
+  if (intro && !cls.includes("intro")) intro.remove();
   const b = document.createElement("div");
   b.className = "bubble " + cls;
   b.innerHTML = html;
@@ -226,12 +226,44 @@ function addBubble(cls, html) {
   return b;
 }
 
+const SUGGESTIONS = [
+  "why did we pick Postgres?",
+  "who owns billing?",
+  "what did we decide about auth?",
+  "how do deploys work?",
+];
+
+function renderIntro() {
+  const chips = SUGGESTIONS.map((q) => `<button class="suggest">${escapeHtml(q)}</button>`).join("");
+  const b = addBubble("ai intro", `<span class="empty-chat">Ask your memory anything — or try one:</span><div class="suggests">${chips}</div>`);
+  b.querySelectorAll(".suggest").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      $("#ask-input").value = btn.textContent;
+      $("#ask-form").dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+    })
+  );
+}
+
+// Honest stand-in for a normal assistant with no memory layer.
+const AMNESIAC = [
+  "I don't have any memory of your project — every session starts from a blank slate, so you'd have to re-explain the whole context first.",
+  "Sorry, I have no record of that. Without a memory layer I forget everything the moment a session ends.",
+  "No context on my end — I can't recall past decisions, notes, or who owns what.",
+];
+function _hash(s) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return h; }
+function amnesiacReply(q) { return AMNESIAC[Math.abs(_hash(q)) % AMNESIAC.length]; }
+
 async function ask(query) {
   addBubble("user", escapeHtml(query));
+  const compare = $("#compare-toggle").checked;
+  if (compare) {
+    addBubble("amnesiac", '<div class="blabel bad">❌ Generic LLM · no memory</div>' + escapeHtml(amnesiacReply(query)));
+  }
   const proj = state.project === "all" ? null : state.project;
   const res = await api("/api/search", { method: "POST", body: JSON.stringify({ query, project: proj }) });
   const srcs = (res.concepts || []).map((c) => `<span class="chip">${escapeHtml(c)}</span>`).join("");
-  addBubble("ai", mdLite(res.answer) + (srcs ? `<div class="srcs">${srcs}</div>` : ""));
+  const head = compare ? '<div class="blabel ok">✅ With Cognee memory</div>' : "";
+  addBubble("ai", head + mdLite(res.answer) + (srcs ? `<div class="srcs">${srcs}</div>` : ""));
   if (res.path && res.path.length) highlightPath(res.path);
 }
 
@@ -305,7 +337,7 @@ function wire() {
 }
 
 (async function () {
-  addBubble("ai", '<span class="empty-chat">Ask me anything about your memories — e.g. <em>“why Postgres?”</em> or <em>“who owns billing?”</em></span>');
+  renderIntro();
   initGraph();
   wire();
   await refresh();

@@ -152,7 +152,19 @@ button:active { transform: translateY(1px); }
 .bubble.user { align-self: flex-end; background: linear-gradient(135deg, var(--accent-2), #5a4bd6); color: #fff; border-bottom-right-radius: 4px; }
 .bubble.ai { align-self: flex-start; background: rgba(15, 20, 36, 0.85); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
 .bubble.ai strong { color: var(--accent); }
+.bubble.amnesiac { align-self: flex-start; background: rgba(255,107,125,.08); border: 1px solid rgba(255,107,125,.3); border-bottom-left-radius: 4px; color: #ffc2ca; }
+.blabel { font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 5px; opacity: .85; }
+.blabel.bad { color: var(--danger); }
+.blabel.ok { color: var(--accent); }
 .bubble .srcs { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+
+.compare-toggle { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--muted); margin: 0 0 10px; cursor: pointer; user-select: none; }
+.compare-toggle input { accent-color: var(--accent-2); width: 14px; height: 14px; }
+.compare-toggle b { color: var(--text); font-weight: 600; }
+
+.suggests { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+.suggest { font-size: 11.5px; padding: 5px 10px; border-radius: 999px; background: rgba(124,108,255,.12); border: 1px solid rgba(124,108,255,.3); color: #c8c2ff; }
+.suggest:hover { background: rgba(124,108,255,.24); color: #fff; }
 .chip { font-size: 10.5px; padding: 3px 8px; border-radius: 999px; background: rgba(124,108,255,.16); border: 1px solid rgba(124,108,255,.3); color: #c8c2ff; }
 .empty-chat { color: var(--muted); font-size: 12.5px; text-align: center; margin: auto; max-width: 220px; line-height: 1.5; }
 

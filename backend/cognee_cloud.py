@@ -139,16 +139,23 @@ def recall(
     api_key: str,
     query: str,
     dataset: str = "",
+    datasets: list | None = None,
     top_k: int = 5,
     scope: str = "auto",
     timeout: float = 20.0,
     tenant_id: str = "",
 ):
-    """POST /api/v1/recall. Returns a list of context items, or an error dict."""
+    """POST /api/v1/recall. Returns a list of context items, or an error dict.
+
+    Scope the search with `datasets` (a list) or `dataset` (single). When both
+    are empty the server searches the whole tenant — avoid that in the app so we
+    don't pull in unrelated datasets (e.g. the Claude Code plugin's).
+    """
     url = base_url.rstrip("/") + "/api/v1/recall"
     body = {"query": query, "top_k": top_k, "only_context": True, "scope": scope}
-    if dataset:
-        body["datasets"] = [dataset]
+    ds_list = [d for d in (datasets or ([dataset] if dataset else [])) if d]
+    if ds_list:
+        body["datasets"] = ds_list
     headers = _headers(base_url, api_key, tenant_id, {"Content-Type": "application/json"})
     req = urllib.request.Request(url, data=json.dumps(body).encode("utf-8"), headers=headers, method="POST")
 
