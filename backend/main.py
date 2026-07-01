@@ -9,15 +9,34 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+ROOT = Path(__file__).resolve().parent.parent
 
-from .memory import build_engine
-from . import seed
 
-FRONTEND = Path(__file__).resolve().parent.parent / "frontend"
+def _load_dotenv(path: Path = ROOT / ".env") -> None:
+    """Tiny stdlib .env loader (no python-dotenv dep). Existing env wins."""
+    if not path.exists():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, val = line.partition("=")
+        key, val = key.strip(), val.strip().strip('"').strip("'")
+        if key and key not in os.environ:
+            os.environ[key] = val
+
+
+_load_dotenv()
+
+from fastapi import FastAPI, HTTPException  # noqa: E402
+from fastapi.responses import FileResponse  # noqa: E402
+from fastapi.staticfiles import StaticFiles  # noqa: E402
+from pydantic import BaseModel  # noqa: E402
+
+from .memory import build_engine  # noqa: E402
+from . import seed  # noqa: E402
+
+FRONTEND = ROOT / "frontend"
 
 app = FastAPI(title="Where's My Context", version="1.0.0")
 engine = build_engine()

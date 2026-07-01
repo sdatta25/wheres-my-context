@@ -429,14 +429,19 @@ class CogneeHttpEngine(DemoEngine):
 def build_engine() -> MemoryEngine:
     choice = os.getenv("MEMORY_ENGINE", "").strip().lower()
 
+    # Cognee Cloud hands each team a dedicated instance URL at kickoff; accept
+    # either COGNEE_CLOUD_URL (hackathon convention) or COGNEE_BASE_URL.
+    def _cloud_url(default: str) -> str:
+        return os.getenv("COGNEE_CLOUD_URL") or os.getenv("COGNEE_BASE_URL") or default
+
     if choice in ("cognee_cloud", "cloud"):
-        base = os.getenv("COGNEE_BASE_URL", "https://api.cognee.ai")
+        base = _cloud_url("https://api.cognee.ai")
         key = os.getenv("COGNEE_API_KEY", "")
         return CogneeHttpEngine(base, key, label="Cognee Cloud")
 
     if choice in ("cognee", "server"):
         # Self-hosted Cognee server (the plugin's local API defaults to :8011).
-        base = os.getenv("COGNEE_BASE_URL", "http://localhost:8011")
+        base = _cloud_url("http://localhost:8011")
         key = os.getenv("COGNEE_API_KEY", "")
         return CogneeHttpEngine(base, key, label="Cognee (server)")
 
