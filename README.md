@@ -1,176 +1,145 @@
 # Where's My Context ◒
 
-**Persistent AI memory that *connects* your context — powered by a knowledge graph.**
+**Persistent AI memory that *connects* your context, powered by a knowledge graph.**
 
-Built for the **Cognee "Where's My Context" hackathon** (June 29 – July 05, 2026).
+Built for the **Cognee "Where's My Context" hackathon** (June 29 to July 5, 2026).
 
-### ▶️ Try it live
+### Try it live
 
-**https://wheres-my-context.vercel.app**  — running on **Cognee Cloud** (badge shows
-"Cognee Cloud ✓"). Ask *"why did we pick Postgres?"* or hit **Seed demo** and explore
-the graph. _(Replace this URL with your actual Vercel domain after deploying.)_
-
-AI agents forget everything the moment a session ends. *Where's My Context* is a
-memory layer + second brain: you feed it notes, decisions, docs and code, it
-builds a **knowledge graph** of the concepts inside them, and any agent (or you)
-can later ask *"where's my context on X?"* and get a grounded answer that shows
-**how** the pieces connect — plus exactly what context a fresh AI session gets
-injected on wake-up.
-
-It runs today on a built-in, zero-dependency **Demo Engine**, and drops straight
-onto **Cognee** / **Cognee Cloud** by flipping two environment variables.
+**[wheres-my-context.vercel.app](https://wheres-my-context.vercel.app)** — running on Cognee Cloud. Ask *"why did we pick Postgres?"* or hit **Seed demo** to explore the graph.
 
 ---
 
-## ✨ What it does
+AI agents forget everything the moment a session ends. *Where's My Context* is a persistent memory layer: you feed it notes, decisions, docs, and code, it builds a **knowledge graph** of the concepts inside them, and any agent (or person) can later ask *"where's my context on X?"* and get a grounded answer that shows how the pieces connect, plus exactly what context a fresh AI session gets injected on wake-up.
 
-- **Feed your brain** — capture notes, decisions, facts, docs, code per project.
-- **Live knowledge graph** — concepts are extracted and linked; the D3
-  force-graph grows as you add memories. Click any node to trace its context.
-- **Ask your memory** — natural-language questions return grounded answers,
-  the connecting concepts, and light up the exact path in the graph.
-- **Forgets vs. remembers** — a compare toggle shows a no-memory LLM's blank
-  stare next to Cognee's grounded answer, side by side.
-- **Shared team brain** — set who you are; every memory records its contributor,
-  people become nodes wired to what they added, and attribution is baked into the
-  cognified graph so *"who set up the GraphQL gateway?"* returns the right teammate.
-  Everyone on the same Cognee tenant reads and writes one graph.
-- **New AI session recall** — simulate the context brief an agent receives when
-  it wakes up on a project (the literal answer to *"where's my context?"*).
+It runs out of the box on a built-in, zero-dependency **Demo Engine**, and switches to **Cognee Cloud** by setting two environment variables.
 
-## 🎬 Demo script (2 minutes, for judges)
+---
 
-> The pitch in one sentence: **AI forgets the moment a session ends — Where's My
-> Context gives it a knowledge-graph memory that persists and *connects*.**
+## What it does
 
-1. **The problem (10s).** Open the app. Tick **⚔️ Compare: no-memory vs Cognee**
-   in the Ask panel. Ask *"why did we pick Postgres?"* → the **❌ Generic LLM**
-   bubble admits it has no memory; the **✅ With Cognee** bubble answers with the
-   real decision *and* shows how concepts connect. That contrast is the whole pitch.
-2. **Watch memory form (30s).** Set *Adding as* to your name. In **Feed your
-   brain**, add a decision, e.g. *"We're moving auth to Auth0 next sprint; Sarah
-   leads it."* The **knowledge graph** grows instantly — a new **person node**
-   (you) wires to the memory, plus concept nodes — and the badge shows
-   **`Cognee Cloud ✓`**: it just persisted + cognified on a live Cognee tenant.
-   Point out the orange contributor nodes: this is a **shared team brain**.
-   Ask *"who set up X?"* → Cognee names the teammate who added it.
-3. **Recall it (30s).** Ask *"what's changing with auth and who owns it?"* → a
-   grounded answer sourced from Cognee's graph, tracing the path in the viz.
-4. **"Where's my context?" (30s).** Hit **Recall** under *New AI session* → see
-   the exact context brief a fresh AI agent gets injected on wake-up. That's the
-   theme, literally: no more starting from zero.
-5. **Proof it's real (10s).** Every live add is a `POST /api/v1/remember` to
-   `…aws.cognee.ai`; every answer is a `POST /api/v1/recall`. Same contract as
-   Cognee's official Claude Code plugin.
+- **Feed your brain.** Capture notes, decisions, facts, docs, and code per project.
+- **Live knowledge graph.** Concepts are extracted and linked. The D3 force-graph grows as you add memories. Click any node to trace its context.
+- **Ask your memory.** Natural-language questions return grounded answers with the connecting concepts highlighted in the graph.
+- **Forgets vs. remembers.** A compare toggle shows a no-memory LLM's blank response next to Cognee's grounded answer, side by side.
+- **Shared team brain.** Every memory records its contributor. People become nodes wired to what they added, so *"who set up the GraphQL gateway?"* returns the right teammate. Everyone on the same Cognee tenant reads and writes one graph.
+- **New session recall.** Simulate the context brief a fresh AI agent receives on wake-up. That's the literal answer to *"where's my context?"*
 
-## 🚀 Run it (30 seconds)
+---
+
+## Quickstart (30 seconds)
 
 ```bash
-./run.sh                 # creates a venv, installs deps, serves on :8000
+./run.sh    # creates a venv, installs deps, serves on :8000
 ```
 
-Then open **http://localhost:8000**. Demo data is seeded automatically, so the
-graph is alive on first load. (Or run manually:
-`pip install -r requirements.txt && uvicorn backend.main:app --reload`.)
+Open **http://localhost:8000**. Demo data is seeded automatically so the graph is live on first load.
 
-## ✅ Tests
+Or manually:
 
-Zero-dependency test suite (no pytest needed) covering the engine, extraction,
-ranking, search/recall, graceful degradation, and the Cognee Cloud client:
+```bash
+pip install -r requirements.txt && uvicorn backend.main:app --reload
+```
+
+---
+
+## Demo walkthrough
+
+The core pitch: ask *"why did we pick Postgres?"* with the **Compare** toggle on. The generic LLM admits it has no memory. The Cognee answer cites the actual decision and traces the concept path in the graph. That contrast is the whole idea.
+
+1. **The problem.** Open the app, enable **Compare: no-memory vs Cognee**, and ask a question about a past decision. The left side is blank; the right side is grounded.
+2. **Watch memory form.** Set *Adding as* to your name and add a new decision. The knowledge graph grows instantly with a person node wired to the new concepts.
+3. **Recall it.** Ask about the decision you just added. Cognee names you as the contributor and traces the path.
+4. **Session recall.** Hit **Recall** under *New AI session* to see the exact context brief a fresh agent would receive on this project.
+
+Every `add` is a `POST /api/v1/remember` to Cognee Cloud. Every `Ask` is a `POST /api/v1/recall`. Same contract as Cognee's official Claude Code plugin.
+
+---
+
+## Tests
+
+Zero-dependency test suite covering the engine, extraction, search/recall, graceful degradation, and the Cognee Cloud client:
 
 ```bash
 ./test.sh
 ```
 
-- `tests/test_engine.py` — extraction, scoping, graph build, search, recall.
-- `tests/test_cognee_cloud.py` — Cognee client request-building + **fallback when
-  the backend is unreachable** (proves the app never crashes if Cognee is down).
+- `tests/test_engine.py` — extraction, scoping, graph build, search, recall
+- `tests/test_cognee_cloud.py` — client request-building and fallback when Cognee is unreachable
 
-Resilience is built in: every Cognee call is wrapped so a Cognee outage silently
-falls back to the local mirror, and the API returns clean JSON errors (never a raw
-stack trace). A `GET /api/health` endpoint reports liveness + backend reachability.
+Every Cognee call is wrapped so an outage silently falls back to the local mirror. The API returns clean JSON errors, never a raw stack trace. `GET /api/health` reports liveness and backend reachability.
 
-## ☁️ Deploy to Vercel
+---
+
+## Deploy to Vercel
 
 The repo is Vercel-ready (`vercel.json` + `api/index.py` serving the FastAPI app).
 
-1. Push to GitHub, then on **vercel.com → Add New → Project**, import the repo.
-2. Framework preset: **Other** (the included `vercel.json` handles the build).
-3. **Settings → Environment Variables** — add your Cognee Cloud connection:
+1. Push to GitHub, then import the repo on vercel.com. Framework preset: **Other**.
+2. Add environment variables under **Settings > Environment Variables**:
    - `MEMORY_ENGINE = cognee_cloud`
    - `COGNEE_CLOUD_URL = https://tenant-<id>.aws.cognee.ai`
    - `COGNEE_TENANT_ID = <your-tenant-id>`
    - `COGNEE_API_KEY = <your-api-key>`
-4. **Deploy.** Open the URL — the badge should read **"Cognee Cloud ✓"**.
+3. Deploy. The badge should read **Cognee Cloud ✓**.
 
-> Note: serverless instances are ephemeral, so the *local graph mirror* resets on
-> cold starts (seed data always shows). Persisted memory + recall live in Cognee
-> Cloud, so answers stay grounded. For a long-lived process with a persistent
-> mirror, a container host (Railway/Fly/Render) also works with the same env vars.
+> Serverless instances are ephemeral, so the local graph mirror resets on cold starts (seed data always shows). Persisted memory and recall live in Cognee Cloud, so answers stay grounded across deploys. For a persistent local mirror, a container host like Railway, Fly, or Render works with the same env vars.
 
-## 🧠 Memory engines
+---
 
-The whole app talks to one `MemoryEngine` interface (`backend/memory.py`), so
-the backend is swappable without touching the UI.
+## Memory engines
+
+The app talks to one `MemoryEngine` interface (`backend/memory.py`), so the backend is fully swappable without touching the UI.
 
 | Engine | How to enable | Notes |
-| --- | --- | --- |
-| **Demo** (default) | nothing | Real in-process co-occurrence graph, no keys, offline. |
-| **Cognee Cloud** ✅ | `MEMORY_ENGINE=cognee_cloud` + `COGNEE_CLOUD_URL` + `COGNEE_TENANT_ID` + `COGNEE_API_KEY` | **Live** — managed memory on your dedicated tenant instance. |
-| **Cognee (server)** | `MEMORY_ENGINE=cognee` + `COGNEE_BASE_URL` | Any self-hosted Cognee API (plugin's local API is `:8011`). |
+|---|---|---|
+| **Demo** (default) | nothing | Real in-process co-occurrence graph. No keys, works offline. |
+| **Cognee Cloud** | `MEMORY_ENGINE=cognee_cloud` + cloud env vars | Live managed memory on a dedicated tenant. |
+| **Cognee (self-hosted)** | `MEMORY_ENGINE=cognee` + `COGNEE_BASE_URL` | Any self-hosted Cognee API. |
 
-Copy `.env.example` → `.env` to configure (values come straight from the Cognee
-Cloud dashboard → API Keys → *Connection Details*).
+Copy `.env.example` to `.env` to configure. Values come from the Cognee Cloud dashboard under API Keys > Connection Details.
 
-### Cognee Cloud integration
+### Cognee Cloud client
 
-`backend/cognee_cloud.py` is a small, stdlib-only client that speaks Cognee's
-**memory-native REST API** — the exact contract used by Cognee's
-[official Claude Code plugin](https://github.com/topoteretes/cognee-integrations):
+`backend/cognee_cloud.py` is a small stdlib-only client speaking Cognee's memory-native REST API, the same contract used by Cognee's [official Claude Code plugin](https://github.com/topoteretes/cognee-integrations):
 
-| Call | Endpoint | Used for |
-| --- | --- | --- |
-| `remember()` | `POST /api/v1/remember` (multipart) | add **+** cognify in one call |
-| `recall()`   | `POST /api/v1/recall` (json)        | authoritative search |
-| `ping()`     | `POST /api/v1/recall` (top_k=1)     | health / auth check |
+| Call | Endpoint | Purpose |
+|---|---|---|
+| `remember()` | `POST /api/v1/remember` (multipart) | Add and cognify in one call |
+| `recall()` | `POST /api/v1/recall` (json) | Authoritative search |
+| `ping()` | `POST /api/v1/recall` (top_k=1) | Health and auth check |
 
-Auth uses `X-Api-Key` **and** `X-Tenant-Id` (both sent only to remote targets;
-`certifi` supplies the CA bundle so HTTPS verifies on macOS). When
-`MEMORY_ENGINE=cognee_cloud`, every `add` is persisted + cognified in the cloud
-and every `Ask` is answered by Cognee's `recall` — the response's graph
-`Nodes:/Connections:` are parsed into a clean grounded answer plus a "how it
-connects" view. The local graph stays as the live visualization and an
-offline-safe fallback (used automatically while a fresh write is still
-cognifying). Connection status shows in the engine badge (`Cognee Cloud ✓`).
+Auth uses `X-Api-Key` and `X-Tenant-Id`. When `MEMORY_ENGINE=cognee_cloud`, every add is persisted and cognified in the cloud and every Ask is answered by Cognee's recall endpoint.
 
-> **Next:** point at a shared team dataset so every teammate's agent recalls
-> from one graph.
+---
 
-## 🏗 Architecture
+## Architecture
 
 ```
-frontend/  index.html · styles.css · app.js   (vanilla + D3 force graph)
+frontend/  index.html · styles.css · app.js   (vanilla JS + D3 force graph)
 backend/   main.py     FastAPI routes + static hosting
            memory.py   MemoryEngine: Demo | Cognee | CogneeCloud
            seed.py     demo dataset
 ```
 
 ```
-add ─▶ extract concepts ─▶ knowledge graph ─┬─▶ search  (grounded answer + path)
-                                            └─▶ recall  (agent context brief)
+add -> extract concepts -> knowledge graph -> search  (grounded answer + path)
+                                          -> recall  (agent context brief)
 ```
 
 ## API
 
 | Method | Route | Purpose |
-| --- | --- | --- |
-| `POST` | `/api/memories` | add + cognify a memory |
-| `GET`  | `/api/memories` | list (optionally `?project=`) |
-| `GET`  | `/api/graph` | nodes + links for the viz |
-| `POST` | `/api/search` | ask a question |
-| `POST` | `/api/recall` | new-session context brief |
-| `GET`  | `/api/status` | active engine + projects |
+|---|---|---|
+| `POST` | `/api/memories` | Add and cognify a memory |
+| `GET` | `/api/memories` | List memories (optionally `?project=`) |
+| `GET` | `/api/graph` | Nodes and links for the visualization |
+| `POST` | `/api/search` | Ask a question |
+| `POST` | `/api/recall` | New-session context brief |
+| `GET` | `/api/status` | Active engine and projects |
 
-## 👥 Team
+---
 
-Private repo — collaborators added via GitHub. Let's win that iPhone 17. 🏆
+## Team
+
+Built by [@sdatta25](https://github.com/sdatta25) and [@nadellasripad11](https://github.com/nadellasripad11).
