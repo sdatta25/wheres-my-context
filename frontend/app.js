@@ -182,15 +182,15 @@ function drawGraph() {
 
   simulation = d3
     .forceSimulation(nodes)
-    .force("link", d3.forceLink(links).id((d) => d.id).distance((d) => (d.kind === "related" ? 70 : 50)).strength(0.6))
-    .force("charge", d3.forceManyBody().strength(-80).distanceMax(300))
-    .force("center", d3.forceCenter(w / 2, h / 2))
-    .force("x", d3.forceX(w / 2).strength(0.06))
-    .force("y", d3.forceY(h / 2).strength(0.06))
-    .force("collide", d3.forceCollide(22))
+    .force("link", d3.forceLink(links).id((d) => d.id)
+      .distance((d) => d.kind === "related" ? 160 : d.kind === "mentions" ? 120 : 100)
+      .strength(0.3))
+    .force("charge", d3.forceManyBody().strength((d) => d.kind === "person" ? -400 : -200).distanceMax(500))
+    .force("center", d3.forceCenter(w / 2, h / 2).strength(0.05))
+    .force("collide", d3.forceCollide((d) => d.kind === "person" ? 60 : 40))
     .force("drift", driftForce)
     .alphaDecay(0)
-    .velocityDecay(0.55)
+    .velocityDecay(0.6)
     .on("tick", ticked);
 
   svg.on("click", clearHighlight);
