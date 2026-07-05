@@ -119,7 +119,7 @@ function drawGraph() {
     .attr("orient", "auto")
     .append("path")
     .attr("d", "M0,-4L8,0L0,4")
-    .attr("fill", "rgba(120,140,200,0.4)");
+    .attr("fill", "rgba(255,255,255,0.3)");
 
   // Links — use path so edge labels can follow the curve
   const linkSel = gLink.selectAll("line").data(links, (d, i) => i);
@@ -136,7 +136,7 @@ function drawGraph() {
   edgeLabelSel.enter().append("text")
     .attr("class", "edge-label")
     .attr("font-size", "8px")
-    .attr("fill", "rgba(138,149,181,0.7)")
+    .attr("fill", "rgba(255,255,255,0.4)")
     .attr("text-anchor", "middle")
     .attr("pointer-events", "none")
     .attr("dy", -4)
@@ -150,11 +150,16 @@ function drawGraph() {
     degree[t] = (degree[t] || 0) + 1;
   });
 
-  // Node colors — richer palette like reference
+  // Node colors — monochrome to match the landing page
   const kindColor = {
-    memory:  "#4de1c1",
-    concept: "#7c6cff",
-    person:  "#ffb057",
+    memory:  "#000000",
+    concept: "#8a8a8a",
+    person:  "#ffffff",
+  };
+  const kindStroke = {
+    memory:  "#ffffff",
+    concept: "rgba(255,255,255,0.25)",
+    person:  "rgba(255,255,255,0.35)",
   };
 
   const nodeRadius = (d) => {
@@ -170,11 +175,9 @@ function drawGraph() {
 
   nodeEnter.append("circle")
     .attr("r", nodeRadius)
-    .attr("fill", (d) => kindColor[d.kind] || "#7c6cff")
-    .attr("fill-opacity", (d) => d.kind === "memory" ? 0.9 : 0.85)
-    .attr("stroke", (d) => kindColor[d.kind] || "#7c6cff")
-    .attr("stroke-width", 2)
-    .attr("stroke-opacity", 0.4)
+    .attr("fill", (d) => kindColor[d.kind] || "#8a8a8a")
+    .attr("stroke", (d) => kindStroke[d.kind] || "rgba(255,255,255,0.25)")
+    .attr("stroke-width", (d) => d.kind === "memory" ? 1.5 : 2)
     .on("click", (e, d) => { e.stopPropagation(); highlightNode(d.id); })
     .append("title").text((d) => d.label);
 
