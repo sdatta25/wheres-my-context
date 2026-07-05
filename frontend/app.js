@@ -363,7 +363,71 @@ async function refresh() {
   await Promise.all([loadMemories(), loadGraph()]);
 }
 
+function switchView(viewName) {
+  // Hide all views
+  document.querySelectorAll(".view-section").forEach(el => {
+    el.classList.add("hidden");
+  });
+
+  // Show selected view
+  const viewEl = document.getElementById(`${viewName}-view`);
+  if (viewEl) {
+    viewEl.classList.remove("hidden");
+  }
+
+  // Update active button
+  document.querySelectorAll(".sidebar-item").forEach(btn => {
+    btn.classList.remove("active");
+  });
+  document.querySelector(`[data-view="${viewName}"]`).classList.add("active");
+
+  // Initialize graph when viewing graph
+  if (viewName === "graph" && !simulation) {
+    initGraph();
+  }
+}
+
 function wire() {
+  // Navigation: sidebar buttons
+  document.querySelectorAll(".sidebar-item").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const view = btn.dataset.view;
+      switchView(view);
+    });
+  });
+
+  // Logo button to graph view
+  document.querySelector(".sidebar-logo-btn").addEventListener("click", () => {
+    switchView("graph");
+  });
+
+  // Search functionality
+  const searchInput = $("#search-input");
+  if (searchInput) {
+    searchInput.addEventListener("input", async (e) => {
+      const query = e.target.value.trim().toLowerCase();
+      const resultsEl = $("#search-results");
+
+      if (!query) {
+        resultsEl.innerHTML = "";
+        return;
+      }
+
+      const results = state.graph.nodes.filter(node =>
+        node.name.toLowerCase().includes(query)
+      );
+
+      resultsEl.innerHTML = results.length === 0
+        ? '<div style="color: var(--muted); font-size: 12px;">No results found</div>'
+        : results.map(node => `
+          <div class="mem-item" style="cursor: pointer;" onclick="highlightNode('${node.id}')">
+            <span class="mtype">${node.type === 'memory' ? '📝' : node.type === 'concept' ? '🧠' : '👤'} ${node.type}</span>
+            <div class="txt">${escapeHtml(node.name)}</div>
+          </div>
+        `).join("");
+    });
+  }
+
   // identity for the shared team brain — persisted per browser
   const idInput = $("#identity");
   idInput.value = localStorage.getItem("wmc_author") || "You";
@@ -394,7 +458,12 @@ function wire() {
     ask(q);
   });
 
-  $("#recall-btn").addEventListener("click", recall);
+  // Recall button in settings view
+  const recallBtn = $("#recall-btn");
+  if (recallBtn) {
+    recallBtn.addEventListener("click", recall);
+  }
+
   $("#project-select").addEventListener("change", (e) => {
     state.project = e.target.value;
     refresh();
