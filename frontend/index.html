@@ -22,22 +22,20 @@
 
   <!-- MAIN LAYOUT: Sidebar + Content -->
   <div class="layout">
-    <!-- LEFT ICON BAR -->
-    <aside class="icon-bar">
-      <div class="icon-logo">◒</div>
-      <nav class="icon-nav">
-        <button class="icon-btn" title="New memory" id="new-memory-btn">✨</button>
-        <button class="icon-btn active" title="Feed">🧠</button>
-        <button class="icon-btn" title="Search">🔍</button>
-        <button class="icon-btn" title="Messages">💬</button>
-        <button class="icon-btn" title="Graph">🔗</button>
-        <button class="icon-btn" title="Recall">🤖</button>
-        <button class="icon-btn" title="Settings">⚙️</button>
-      </nav>
-    </aside>
-
-    <!-- RIGHT SIDEBAR -->
+    <!-- ICON SIDEBAR (Hover to reveal labels) -->
     <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">◒</div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="sidebar-item active" data-label="Feed">🧠</button>
+        <button class="sidebar-item" data-label="Memories">💾</button>
+        <button class="sidebar-item" data-label="Search">🔍</button>
+        <button class="sidebar-item" data-label="Recall">🤖</button>
+        <button class="sidebar-item" data-label="Settings">⚙️</button>
+      </nav>
+
       <div class="sidebar-section">
         <h3 class="section-title">Feed your brain</h3>
         <div class="identity-row">
