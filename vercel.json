@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python",
+      "config": { "includeFiles": ["backend/**"], "maxLambdaSize": "15mb" }
+    },
+    { "src": "frontend/**", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/index.py" },
+    { "src": "/", "dest": "/frontend/index.html" },
+    { "src": "/(styles\\.css|app\\.js|favicon\\.ico)", "dest": "/frontend/$1" },
+    { "src": "/(.*)", "dest": "/frontend/$1" }
+  ]
+}

@@ -4,6 +4,12 @@
 
 Built for the **Cognee "Where's My Context" hackathon** (June 29 – July 05, 2026).
 
+### ▶️ Try it live
+
+**https://wheres-my-context.vercel.app**  — running on **Cognee Cloud** (badge shows
+"Cognee Cloud ✓"). Ask *"why did we pick Postgres?"* or hit **Seed demo** and explore
+the graph. _(Replace this URL with your actual Vercel domain after deploying.)_
+
 AI agents forget everything the moment a session ends. *Where's My Context* is a
 memory layer + second brain: you feed it notes, decisions, docs and code, it
 builds a **knowledge graph** of the concepts inside them, and any agent (or you)
@@ -66,6 +72,41 @@ onto **Cognee** / **Cognee Cloud** by flipping two environment variables.
 Then open **http://localhost:8000**. Demo data is seeded automatically, so the
 graph is alive on first load. (Or run manually:
 `pip install -r requirements.txt && uvicorn backend.main:app --reload`.)
+
+## ✅ Tests
+
+Zero-dependency test suite (no pytest needed) covering the engine, extraction,
+ranking, search/recall, graceful degradation, and the Cognee Cloud client:
+
+```bash
+./test.sh
+```
+
+- `tests/test_engine.py` — extraction, scoping, graph build, search, recall.
+- `tests/test_cognee_cloud.py` — Cognee client request-building + **fallback when
+  the backend is unreachable** (proves the app never crashes if Cognee is down).
+
+Resilience is built in: every Cognee call is wrapped so a Cognee outage silently
+falls back to the local mirror, and the API returns clean JSON errors (never a raw
+stack trace). A `GET /api/health` endpoint reports liveness + backend reachability.
+
+## ☁️ Deploy to Vercel
+
+The repo is Vercel-ready (`vercel.json` + `api/index.py` serving the FastAPI app).
+
+1. Push to GitHub, then on **vercel.com → Add New → Project**, import the repo.
+2. Framework preset: **Other** (the included `vercel.json` handles the build).
+3. **Settings → Environment Variables** — add your Cognee Cloud connection:
+   - `MEMORY_ENGINE = cognee_cloud`
+   - `COGNEE_CLOUD_URL = https://tenant-<id>.aws.cognee.ai`
+   - `COGNEE_TENANT_ID = <your-tenant-id>`
+   - `COGNEE_API_KEY = <your-api-key>`
+4. **Deploy.** Open the URL — the badge should read **"Cognee Cloud ✓"**.
+
+> Note: serverless instances are ephemeral, so the *local graph mirror* resets on
+> cold starts (seed data always shows). Persisted memory + recall live in Cognee
+> Cloud, so answers stay grounded. For a long-lived process with a persistent
+> mirror, a container host (Railway/Fly/Render) also works with the same env vars.
 
 ## 🧠 Memory engines
 

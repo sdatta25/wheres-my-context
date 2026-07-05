@@ -259,6 +259,11 @@ const AMNESIAC = [
 function _hash(s) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return h; }
 function amnesiacReply(q) { return AMNESIAC[Math.abs(_hash(q)) % AMNESIAC.length]; }
 
+const ENGINE_TAG = {
+  cognee_cloud: "Cognee Cloud",
+  local_mirror: "local memory",
+};
+
 async function ask(query) {
   addBubble("user", escapeHtml(query));
   const compare = $("#compare-toggle").checked;
@@ -266,27 +271,61 @@ async function ask(query) {
     addBubble("amnesiac", '<div class="blabel bad">❌ Generic LLM · no memory</div>' + escapeHtml(amnesiacReply(query)));
   }
   const proj = state.project === "all" ? null : state.project;
-  const res = await api("/api/search", { method: "POST", body: JSON.stringify({ query, project: proj }) });
-  const srcs = (res.concepts || []).map((c) => `<span class="chip">${escapeHtml(c)}</span>`).join("");
-  const head = compare ? '<div class="blabel ok">✅ With Cognee memory</div>' : "";
-  addBubble("ai", head + mdLite(res.answer) + (srcs ? `<div class="srcs">${srcs}</div>` : ""));
-  if (res.path && res.path.length) highlightPath(res.path);
+  const thinking = addBubble("ai thinking", "…recalling context");
+  const t0 = performance.now();
+  try {
+    const res = await api("/api/search", { method: "POST", body: JSON.stringify({ query, project: proj }) });
+    const rtt = Math.round(performance.now() - t0);
+    thinking.remove();
+    const srcs = (res.concepts || []).map((c) => `<span class="chip">${escapeHtml(c)}</span>`).join("");
+    const head = compare ? '<div class="blabel ok">✅ With Cognee memory</div>' : "";
+    const engineTag = ENGINE_TAG[res.source_engine] || "memory";
+    const note = res.cognee_note ? ` · ${escapeHtml(res.cognee_note)}` : "";
+    const metrics = `<div class="metrics">⚡ ${res.elapsed_ms ?? rtt} ms · ${engineTag}${note}</div>`;
+    addBubble("ai", head + mdLite(res.answer) + metrics + (srcs ? `<div class="srcs">${srcs}</div>` : ""));
+    if (res.path && res.path.length) highlightPath(res.path);
+  } catch (e) {
+    thinking.remove();
+    addBubble("ai error", "⚠️ Couldn't reach the memory backend. It may be starting up — try again in a moment.");
+    toast("Memory backend unreachable");
+  }
 }
 
 /* ------------------------------------------------------------------ recall */
 async function recall() {
   const task = $("#recall-task").value.trim();
   const proj = state.project === "all" ? "atlas" : state.project;
-  const res = await api("/api/recall", { method: "POST", body: JSON.stringify({ project: proj, task }) });
   const out = $("#recall-out");
   out.classList.remove("hidden");
-  out.textContent =
-    "🧠 injecting memory into fresh agent session…\n\n" +
-    res.brief +
-    `\n\n(${res.count} memories available for “${proj}”)`;
+  out.textContent = "🧠 injecting memory into fresh agent session…";
+  try {
+    const res = await api("/api/recall", { method: "POST", body: JSON.stringify({ project: proj, task }) });
+    out.textContent =
+      "🧠 injecting memory into fresh agent session…\n\n" +
+      res.brief +
+      `\n\n(${res.count} memories available for “${proj}” · ⚡ ${res.elapsed_ms ?? "?"} ms)`;
+  } catch (e) {
+    out.textContent = "⚠️ Couldn't reach the memory backend — try again in a moment.";
+    toast("Memory backend unreachable");
+  }
 }
 
 /* ------------------------------------------------------------------ helpers */
+let _toastTimer;
+function toast(msg) {
+  let t = $("#toast");
+  if (!t) {
+    t = document.createElement("div");
+    t.id = "toast";
+    t.className = "toast";
+    document.body.appendChild(t);
+  }
+  t.textContent = "⚠️ " + msg;
+  t.classList.add("show");
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.remove("show"), 4000);
+}
+
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])
@@ -318,9 +357,13 @@ function wire() {
     const project = state.project === "all" ? "atlas" : state.project;
     const author = idInput.value.trim() || "You";
     localStorage.setItem("wmc_author", author);
-    await api("/api/memories", { method: "POST", body: JSON.stringify({ text, type, project, author }) });
-    $("#add-text").value = "";
-    await refresh();
+    try {
+      await api("/api/memories", { method: "POST", body: JSON.stringify({ text, type, project, author }) });
+      $("#add-text").value = "";
+      await refresh();
+    } catch (err) {
+      toast("Couldn't save that memory — try again");
+    }
   });
 
   $("#ask-form").addEventListener("submit", (e) => {
@@ -336,11 +379,14 @@ function wire() {
     state.project = e.target.value;
     refresh();
   });
-  $("#seed-btn").addEventListener("click", async () => { await api("/api/seed", { method: "POST" }); await refresh(); });
+  $("#seed-btn").addEventListener("click", async () => {
+    try { await api("/api/seed", { method: "POST" }); await refresh(); }
+    catch { toast("Couldn't load demo data"); }
+  });
   $("#reset-btn").addEventListener("click", async () => {
     const proj = state.project === "all" ? "" : `?project=${encodeURIComponent(state.project)}`;
-    await api("/api/reset" + proj, { method: "POST" });
-    await refresh();
+    try { await api("/api/reset" + proj, { method: "POST" }); await refresh(); }
+    catch { toast("Couldn't reset"); }
   });
 
   window.addEventListener("resize", () => {
@@ -353,5 +399,12 @@ function wire() {
   renderIntro();
   initGraph();
   wire();
-  await refresh();
+  try {
+    await refresh();
+  } catch (e) {
+    // Backend cold-starting (serverless) or briefly down — show a friendly note
+    // and retry instead of leaving a blank/broken page.
+    toast("Server waking up — retrying…");
+    setTimeout(() => refresh().catch(() => toast("Still unreachable — refresh the page")), 3000);
+  }
 })();

@@ -7,6 +7,7 @@ Serves the single-page frontend and a small JSON API over the pluggable
 from __future__ import annotations
 
 import os
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -28,8 +29,8 @@ def _load_dotenv(path: Path = ROOT / ".env") -> None:
 
 _load_dotenv()
 
-from fastapi import FastAPI, HTTPException  # noqa: E402
-from fastapi.responses import FileResponse  # noqa: E402
+from fastapi import FastAPI, HTTPException, Request  # noqa: E402
+from fastapi.responses import FileResponse, JSONResponse  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 from pydantic import BaseModel  # noqa: E402
 
@@ -40,6 +41,13 @@ FRONTEND = ROOT / "frontend"
 
 app = FastAPI(title="Where's My Context", version="1.0.0")
 engine = build_engine()
+
+
+@app.exception_handler(Exception)
+async def _clean_errors(request: Request, exc: Exception):
+    """A judge should never see a raw stack trace — always return tidy JSON so
+    the UI can degrade gracefully even if the memory backend misbehaves."""
+    return JSONResponse(status_code=500, content={"error": str(exc)[:200] or "internal error"})
 
 
 @app.middleware("http")
@@ -84,6 +92,15 @@ def status():
     return st
 
 
+@app.get("/api/health")
+def health():
+    """Lightweight liveness + memory-backend reachability for judges/monitoring."""
+    try:
+        return {"ok": True, "engine": engine.status()}
+    except Exception as e:  # never fail the health check
+        return {"ok": False, "error": str(e)[:160]}
+
+
 @app.get("/api/memories")
 def list_memories(project: str | None = None):
     return {"memories": engine.list(project)}
@@ -112,12 +129,18 @@ def graph(project: str | None = None):
 
 @app.post("/api/search")
 def search(req: SearchReq):
-    return engine.search(req.query, req.project)
+    t = time.perf_counter()
+    res = engine.search(req.query, req.project)
+    res["elapsed_ms"] = round((time.perf_counter() - t) * 1000)
+    return res
 
 
 @app.post("/api/recall")
 def recall(req: RecallReq):
-    return engine.recall(req.project, req.task)
+    t = time.perf_counter()
+    res = engine.recall(req.project, req.task)
+    res["elapsed_ms"] = round((time.perf_counter() - t) * 1000)
+    return res
 
 
 @app.post("/api/seed")
@@ -136,7 +159,13 @@ def reset(project: str | None = None):
 
 @app.get("/")
 def index():
-    return FileResponse(FRONTEND / "index.html")
+    idx = FRONTEND / "index.html"
+    if idx.exists():
+        return FileResponse(idx)
+    return {"service": "wheres-my-context", "engine": engine.status()}
 
 
-app.mount("/", StaticFiles(directory=str(FRONTEND)), name="static")
+# Serve the SPA locally. On Vercel the frontend is served as static assets, so
+# guard this mount so importing the app never crashes if the dir isn't bundled.
+if FRONTEND.exists():
+    app.mount("/", StaticFiles(directory=str(FRONTEND), check_dir=False), name="static")
