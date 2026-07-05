@@ -408,6 +408,25 @@ body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
   color: var(--text);
 }
 
+/* Quick add section */
+.quick-add-section {
+  margin-top: auto;
+  padding: 16px;
+  background: rgba(20, 27, 48, 0.3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  border-top: 1px solid rgba(77, 225, 193, 0.2);
+}
+
+.quick-add-section h3 {
+  margin: 0 0 12px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
 .graph-section {
   flex: 2;
   display: flex;

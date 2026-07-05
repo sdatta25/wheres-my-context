@@ -445,6 +445,26 @@ function wire() {
     }
   });
 
+  // Quick add form in memories view
+  const quickAddForm = $("#quick-add-form");
+  if (quickAddForm) {
+    quickAddForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const text = $("#quick-add-text").value.trim();
+      if (!text) return;
+      const type = $("#quick-add-type").value;
+      const project = state.project === "all" ? "atlas" : state.project;
+      const author = idInput.value.trim() || "You";
+      try {
+        await api("/api/memories", { method: "POST", body: JSON.stringify({ text, type, project, author }) });
+        $("#quick-add-text").value = "";
+        await refresh();
+      } catch (err) {
+        toast("Couldn't save that memory — try again");
+      }
+    });
+  }
+
   $("#ask-form").addEventListener("submit", (e) => {
     e.preventDefault();
     const q = $("#ask-input").value.trim();

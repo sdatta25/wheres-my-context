@@ -60,6 +60,24 @@
         </div>
         <div class="view-content">
           <div id="mem-list" class="mem-list"></div>
+
+          <!-- Quick Add Memory Form -->
+          <div class="quick-add-section">
+            <h3>Add to memories</h3>
+            <form id="quick-add-form" class="add-form">
+              <textarea id="quick-add-text" rows="2" placeholder="Add a new memory…"></textarea>
+              <div class="form-row">
+                <select id="quick-add-type">
+                  <option value="note" selected>📝 note</option>
+                  <option value="decision">🧭 decision</option>
+                  <option value="fact">📌 fact</option>
+                  <option value="doc">📄 doc</option>
+                  <option value="code">💻 code</option>
+                </select>
+                <button type="submit" class="btn-primary">Add</button>
+              </div>
+            </form>
+          </div>
         </div>
       </section>
 
