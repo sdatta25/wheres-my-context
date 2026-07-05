@@ -60,7 +60,7 @@ async function loadMemories() {
 }
 
 /* ------------------------------------------------------------------- graph */
-let simulation, svg, gLink, gNode, gLabel, zoomG, zoomBehavior;
+let simulation, svg, gLink, gNode, gLabel, zoomG, zoomBehavior, floatTimer;
 
 function initGraph() {
   const el = $("#graph");
@@ -203,55 +203,55 @@ function drawGraph() {
     .merge(labelSel);
 
   if (simulation) simulation.stop();
+  if (floatTimer) { floatTimer.stop(); floatTimer = null; }
 
   nodes.forEach((d, i) => { d._phase = (i / nodes.length) * Math.PI * 2; });
 
-  let t = 0;
-  // Barely-there breathing motion — enough to feel alive, not enough to
-  // shove clusters into the walls.
-  function driftForce() {
-    t += 0.004;
-    nodes.forEach((d) => {
-      d.vx += Math.cos(t + d._phase) * 0.04;
-      d.vy += Math.sin(t + d._phase * 0.7) * 0.04;
-    });
-  }
+  // Reserve horizontal room for each node's label so text never overlaps
+  const labelSpace = (d) => nodeRadius(d) + 12 + shortLabel(d).length * 2.8;
 
   simulation = d3
     .forceSimulation(nodes)
     .force("link", d3.forceLink(links).id((d) => d.id)
-      .distance((d) => d.kind === "related" ? 150 : 100)
-      .strength(0.45))
-    .force("charge", d3.forceManyBody().strength(-320).distanceMax(360))
-    .force("x", d3.forceX(w / 2).strength(0.09))
-    .force("y", d3.forceY(h / 2).strength(0.11))
-    .force("collide", d3.forceCollide((d) => nodeRadius(d) + 16).strength(0.9))
-    .force("drift", driftForce)
-    .alphaDecay(0)
-    .velocityDecay(0.5)
-    .on("tick", ticked);
+      .distance((d) => d.kind === "related" ? 170 : 120)
+      .strength(0.4))
+    .force("charge", d3.forceManyBody().strength(-380).distanceMax(420))
+    .force("x", d3.forceX(w / 2).strength(0.07))
+    .force("y", d3.forceY(h / 2).strength(0.09))
+    .force("collide", d3.forceCollide(labelSpace).strength(0.95))
+    .velocityDecay(0.45)
+    .on("tick", render);
 
-  // Once the layout settles, zoom to fit it neatly in view
-  setTimeout(fitToView, 900);
+  // Once the physics has settled, zoom to fit and start a purely cosmetic
+  // float — offsets rendered positions with slow sine waves, so the motion
+  // is silky and can never fight the layout or push nodes into walls.
+  setTimeout(() => {
+    fitToView();
+    floatTimer = d3.timer((elapsed) => {
+      const tt = elapsed * 0.0005;
+      nodes.forEach((d) => {
+        d._ox = Math.sin(tt + d._phase) * 4;
+        d._oy = Math.cos(tt * 0.8 + d._phase * 1.3) * 4;
+      });
+      render();
+    });
+  }, 1300);
 
   svg.on("click", clearHighlight);
 
-  function ticked() {
-    const pad = 40;
-    nodes.forEach((d) => {
-      d.x = Math.max(pad, Math.min(w - pad, d.x));
-      d.y = Math.max(pad, Math.min(h - pad, d.y));
-    });
+  const px = (d) => d.x + (d._ox || 0);
+  const py = (d) => d.y + (d._oy || 0);
 
+  function render() {
     gLink.selectAll("line")
-      .attr("x1", (d) => d.source.x).attr("y1", (d) => d.source.y)
-      .attr("x2", (d) => d.target.x).attr("y2", (d) => d.target.y);
+      .attr("x1", (d) => px(d.source)).attr("y1", (d) => py(d.source))
+      .attr("x2", (d) => px(d.target)).attr("y2", (d) => py(d.target));
 
     // Rotate edge labels along the line
     gLink.selectAll(".edge-label").each(function(d) {
-      const mx = (d.source.x + d.target.x) / 2;
-      const my = (d.source.y + d.target.y) / 2;
-      const angle = Math.atan2(d.target.y - d.source.y, d.target.x - d.source.x) * 180 / Math.PI;
+      const mx = (px(d.source) + px(d.target)) / 2;
+      const my = (py(d.source) + py(d.target)) / 2;
+      const angle = Math.atan2(py(d.target) - py(d.source), px(d.target) - px(d.source)) * 180 / Math.PI;
       const flip = angle > 90 || angle < -90 ? 180 : 0;
       d3.select(this)
         .attr("x", mx).attr("y", my)
@@ -259,8 +259,8 @@ function drawGraph() {
         .text(d.label || "");
     });
 
-    gNode.selectAll("g.node").attr("transform", (d) => `translate(${d.x},${d.y})`);
-    gLabel.selectAll("text").attr("x", (d) => d.x).attr("y", (d) => d.y);
+    gNode.selectAll("g.node").attr("transform", (d) => `translate(${px(d)},${py(d)})`);
+    gLabel.selectAll("text").attr("x", (d) => px(d)).attr("y", (d) => py(d));
   }
 }
 
@@ -582,7 +582,12 @@ function wire() {
 
   window.addEventListener("resize", () => {
     const { w, h } = size();
-    if (simulation) simulation.force("center", d3.forceCenter(w / 2, h / 2)).alpha(0.3).restart();
+    if (simulation) {
+      simulation
+        .force("x", d3.forceX(w / 2).strength(0.07))
+        .force("y", d3.forceY(h / 2).strength(0.09))
+        .alpha(0.3).restart();
+    }
   });
 }
 
