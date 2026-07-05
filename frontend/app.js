@@ -9,7 +9,7 @@ const api = async (path, opts) => {
   return r.json();
 };
 
-const state = { project: "all", graph: { nodes: [], links: [] } };
+const state = { project: "all", graph: { nodes: [], links: [] }, memories: [] };
 
 /* ------------------------------------------------------------------ status */
 async function loadStatus() {
@@ -36,6 +36,7 @@ async function loadMemories() {
   const { memories } = await api(
     "/api/memories" + (proj ? `?project=${encodeURIComponent(proj)}` : "")
   );
+  state.memories = memories;
   $("#mem-count").textContent = memories.length;
   const list = $("#mem-list");
   list.innerHTML = "";
@@ -399,7 +400,7 @@ function wire() {
   // Search functionality
   const searchInput = $("#search-input");
   if (searchInput) {
-    searchInput.addEventListener("input", async (e) => {
+    searchInput.addEventListener("input", (e) => {
       const query = e.target.value.trim().toLowerCase();
       const resultsEl = $("#search-results");
 
@@ -408,18 +409,23 @@ function wire() {
         return;
       }
 
-      const results = state.graph.nodes.filter(node =>
-        node.name.toLowerCase().includes(query)
+      const results = state.memories.filter(m =>
+        m.text.toLowerCase().includes(query) ||
+        m.type.toLowerCase().includes(query) ||
+        m.project.toLowerCase().includes(query)
       );
 
       resultsEl.innerHTML = results.length === 0
-        ? '<div style="color: var(--muted); font-size: 12px;">No results found</div>'
-        : results.map(node => `
-          <div class="mem-item" style="cursor: pointer;" onclick="highlightNode('${node.id}')">
-            <span class="mtype">${node.type === 'memory' ? '📝' : node.type === 'concept' ? '🧠' : '👤'} ${node.type}</span>
-            <div class="txt">${escapeHtml(node.name)}</div>
+        ? '<div style="color: var(--muted); font-size: 12px; padding: 12px;">No memories found</div>'
+        : results.map(m => {
+          const by = m.author ? ` · ${escapeHtml(m.author)}` : "";
+          return `
+          <div class="mem-item" style="cursor: pointer;" onclick="highlightNode('m:${m.id}')">
+            <span class="mtype">${typeEmoji[m.type] || "•"} ${m.type} · ${m.project}${by}</span>
+            <div class="txt">${escapeHtml(m.text)}</div>
           </div>
-        `).join("");
+        `;
+        }).join("");
     });
   }
 
