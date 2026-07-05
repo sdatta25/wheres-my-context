@@ -90,7 +90,7 @@ button:active { transform: translateY(1px); }
 /* ---------- layout ---------- */
 .grid {
   flex: 1; display: grid; min-height: 0;
-  grid-template-columns: 330px 1fr 380px; gap: 16px; padding: 16px;
+  grid-template-columns: 330px 1fr 450px; gap: 16px; padding: 16px;
 }
 .panel {
   background: var(--panel); border: 1px solid var(--border);
