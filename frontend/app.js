@@ -107,71 +107,96 @@ function drawGraph() {
   const { w, h } = size();
   const { nodes, links } = state.graph;
 
-  const link = gLink.selectAll("line").data(links, (d, i) => i);
-  link.exit().remove();
-  link
-    .enter()
-    .append("line")
-    .attr("class", (d) => "link " + d.kind)
-    .attr("stroke-width", (d) => (d.kind === "related" ? 1 : 1.4))
-    .merge(link);
+  // Arrowhead marker
+  svg.select("defs").remove();
+  svg.append("defs").append("marker")
+    .attr("id", "arrow")
+    .attr("viewBox", "0 -4 8 8")
+    .attr("refX", 18)
+    .attr("refY", 0)
+    .attr("markerWidth", 6)
+    .attr("markerHeight", 6)
+    .attr("orient", "auto")
+    .append("path")
+    .attr("d", "M0,-4L8,0L0,4")
+    .attr("fill", "rgba(120,140,200,0.4)");
 
-  // Add relationship labels on edges
-  const edgeLabels = gLink.selectAll(".edge-label").data(links, (d, i) => i);
-  edgeLabels.exit().remove();
-  edgeLabels
-    .enter()
-    .append("text")
+  // Links — use path so edge labels can follow the curve
+  const linkSel = gLink.selectAll("line").data(links, (d, i) => i);
+  linkSel.exit().remove();
+  linkSel.enter().append("line")
+    .attr("class", (d) => "link " + d.kind)
+    .attr("stroke-width", 1)
+    .attr("marker-end", "url(#arrow)")
+    .merge(linkSel);
+
+  // Edge labels — rotated to follow the line
+  const edgeLabelSel = gLink.selectAll(".edge-label").data(links, (d, i) => i);
+  edgeLabelSel.exit().remove();
+  edgeLabelSel.enter().append("text")
     .attr("class", "edge-label")
-    .attr("font-size", "9px")
-    .attr("fill", "rgba(232, 236, 246, 0.5)")
+    .attr("font-size", "8px")
+    .attr("fill", "rgba(138,149,181,0.7)")
     .attr("text-anchor", "middle")
     .attr("pointer-events", "none")
-    .merge(edgeLabels);
+    .attr("dy", -4)
+    .merge(edgeLabelSel);
 
-  const node = gNode.selectAll("g.node").data(nodes, (d) => d.id);
-  node.exit().remove();
-  const nodeEnter = node
-    .enter()
-    .append("g")
-    .attr("class", "node")
-    .call(drag());
-  const nodeColor = { memory: "var(--mem)", concept: "var(--con)", person: "var(--per)" };
-  const nodeRadius = (d) =>
-    d.kind === "memory" ? 8
-      : d.kind === "person" ? Math.min(9 + d.size * 0.4, 18)
-      : Math.min(6 + d.size * 0.5, 16);
-  nodeEnter
-    .append("circle")
+  // Degree map for sizing
+  const degree = {};
+  links.forEach((l) => {
+    const s = l.source.id || l.source, t = l.target.id || l.target;
+    degree[s] = (degree[s] || 0) + 1;
+    degree[t] = (degree[t] || 0) + 1;
+  });
+
+  // Node colors — richer palette like reference
+  const kindColor = {
+    memory:  "#4de1c1",
+    concept: "#7c6cff",
+    person:  "#ffb057",
+  };
+
+  const nodeRadius = (d) => {
+    const deg = degree[d.id] || 1;
+    if (d.kind === "person")  return Math.min(14 + deg * 1.2, 28);
+    if (d.kind === "memory")  return 9;
+    return Math.min(8 + deg * 0.8, 20);
+  };
+
+  const nodeSel = gNode.selectAll("g.node").data(nodes, (d) => d.id);
+  nodeSel.exit().remove();
+  const nodeEnter = nodeSel.enter().append("g").attr("class", "node").call(drag());
+
+  nodeEnter.append("circle")
     .attr("r", nodeRadius)
-    .attr("fill", (d) => nodeColor[d.kind] || "var(--con)")
-    .attr("stroke", "#0a0e1a")
-    .attr("stroke-width", 1.5)
+    .attr("fill", (d) => kindColor[d.kind] || "#7c6cff")
+    .attr("fill-opacity", (d) => d.kind === "memory" ? 0.9 : 0.85)
+    .attr("stroke", (d) => kindColor[d.kind] || "#7c6cff")
+    .attr("stroke-width", 2)
+    .attr("stroke-opacity", 0.4)
     .on("click", (e, d) => { e.stopPropagation(); highlightNode(d.id); })
-    .append("title")
-    .text((d) => d.label);
-  nodeEnter.merge(node);
+    .append("title").text((d) => d.label);
 
-  const label = gLabel.selectAll("text").data(nodes, (d) => d.id);
-  label.exit().remove();
-  label
-    .enter()
-    .append("text")
+  nodeEnter.merge(nodeSel);
+
+  // Node labels — show all, but smaller for non-person
+  const labelSel = gLabel.selectAll("text").data(nodes, (d) => d.id);
+  labelSel.exit().remove();
+  labelSel.enter().append("text")
     .attr("class", (d) => "node-label " + d.kind)
-    .attr("dx", (d) => (d.kind === "person" ? 13 : 11))
+    .attr("font-size", (d) => d.kind === "person" ? "12px" : "10px")
+    .attr("font-weight", (d) => d.kind === "person" ? "700" : "400")
+    .attr("dx", (d) => nodeRadius(d) + 4)
     .attr("dy", 4)
-    .text((d) => (d.kind === "concept" || d.kind === "person" ? d.label : ""))
-    .merge(label);
+    .text((d) => d.label)
+    .merge(labelSel);
 
   if (simulation) simulation.stop();
 
-  // Give each node a unique phase so they don't all move in sync
-  nodes.forEach((d, i) => {
-    d._phase = (i / nodes.length) * Math.PI * 2;
-  });
+  nodes.forEach((d, i) => { d._phase = (i / nodes.length) * Math.PI * 2; });
 
   let t = 0;
-  // Gentle breathing drift — tiny nudge per tick in a slow sine wave
   function driftForce() {
     t += 0.003;
     nodes.forEach((d) => {
@@ -183,11 +208,13 @@ function drawGraph() {
   simulation = d3
     .forceSimulation(nodes)
     .force("link", d3.forceLink(links).id((d) => d.id)
-      .distance((d) => d.kind === "related" ? 160 : d.kind === "mentions" ? 120 : 100)
-      .strength(0.3))
-    .force("charge", d3.forceManyBody().strength((d) => d.kind === "person" ? -400 : -200).distanceMax(500))
-    .force("center", d3.forceCenter(w / 2, h / 2).strength(0.05))
-    .force("collide", d3.forceCollide((d) => d.kind === "person" ? 60 : 40))
+      .distance((d) => d.kind === "related" ? 180 : 130)
+      .strength(0.25))
+    .force("charge", d3.forceManyBody()
+      .strength((d) => d.kind === "person" ? -600 : -250)
+      .distanceMax(600))
+    .force("center", d3.forceCenter(w / 2, h / 2).strength(0.04))
+    .force("collide", d3.forceCollide((d) => nodeRadius(d) + 30))
     .force("drift", driftForce)
     .alphaDecay(0)
     .velocityDecay(0.6)
@@ -196,20 +223,27 @@ function drawGraph() {
   svg.on("click", clearHighlight);
 
   function ticked() {
-    const pad = 26;
+    const pad = 40;
     nodes.forEach((d) => {
       d.x = Math.max(pad, Math.min(w - pad, d.x));
       d.y = Math.max(pad, Math.min(h - pad, d.y));
     });
+
     gLink.selectAll("line")
       .attr("x1", (d) => d.source.x).attr("y1", (d) => d.source.y)
       .attr("x2", (d) => d.target.x).attr("y2", (d) => d.target.y);
 
-    // Position edge labels at midpoint of links
-    gLink.selectAll(".edge-label")
-      .attr("x", (d) => (d.source.x + d.target.x) / 2)
-      .attr("y", (d) => (d.source.y + d.target.y) / 2)
-      .text((d) => d.label || "");
+    // Rotate edge labels along the line
+    gLink.selectAll(".edge-label").each(function(d) {
+      const mx = (d.source.x + d.target.x) / 2;
+      const my = (d.source.y + d.target.y) / 2;
+      const angle = Math.atan2(d.target.y - d.source.y, d.target.x - d.source.x) * 180 / Math.PI;
+      const flip = angle > 90 || angle < -90 ? 180 : 0;
+      d3.select(this)
+        .attr("x", mx).attr("y", my)
+        .attr("transform", `rotate(${angle + flip},${mx},${my})`)
+        .text(d.label || "");
+    });
 
     gNode.selectAll("g.node").attr("transform", (d) => `translate(${d.x},${d.y})`);
     gLabel.selectAll("text").attr("x", (d) => d.x).attr("y", (d) => d.y);
