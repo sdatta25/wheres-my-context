@@ -174,6 +174,16 @@ function drawGraph() {
     .force("collide", d3.forceCollide(22))
     .on("tick", ticked);
 
+  // Keep graph moving with gentle continuous animation
+  simulation.alphaTarget(0.01).restart();
+
+  // Periodically boost animation for constant motion
+  const animationInterval = setInterval(() => {
+    if (simulation) {
+      simulation.alphaTarget(0.02).restart();
+    }
+  }, 3000);
+
   svg.on("click", clearHighlight);
 
   function ticked() {
