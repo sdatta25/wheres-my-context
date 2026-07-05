@@ -199,6 +199,244 @@ button:active { transform: translateY(1px); }
   body { overflow: auto; }
 }
 
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+  }
+
+  .brand h1 {
+    font-size: 16px;
+  }
+
+  .tag {
+    font-size: 11px;
+  }
+
+  .controls {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .proj {
+    flex: 1;
+    min-width: 150px;
+  }
+
+  .grid {
+    gap: 12px;
+    padding: 12px;
+    grid-template-rows: auto 300px auto;
+  }
+
+  .panel {
+    padding: 12px;
+  }
+
+  .panel h2 {
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+
+  .center-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .legend {
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 10.5px;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    height: auto;
+  }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .brand {
+    width: 100%;
+    gap: 10px;
+  }
+
+  .brand h1 {
+    font-size: 14px;
+  }
+
+  .logo {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    font-size: 22px;
+  }
+
+  .tag {
+    font-size: 10px;
+    display: none;
+  }
+
+  .controls {
+    width: 100%;
+    gap: 6px;
+  }
+
+  .badge {
+    font-size: 10px;
+    padding: 4px 8px;
+    flex: 0 0 auto;
+  }
+
+  .proj {
+    flex: 1;
+    min-width: auto;
+  }
+
+  .proj select {
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+
+  button {
+    font-size: 12px;
+    padding: 7px 12px;
+  }
+
+  .grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+    min-height: auto;
+  }
+
+  .panel {
+    padding: 10px;
+    min-height: auto;
+    max-height: none;
+  }
+
+  .panel h2 {
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+
+  .panel h3 {
+    font-size: 11px;
+  }
+
+  .add textarea {
+    font-size: 12px;
+    min-height: 60px;
+  }
+
+  .add .row {
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  .add .row select,
+  .add .row button {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+
+  .mem-list {
+    max-height: 250px;
+  }
+
+  .mem-item {
+    font-size: 11.5px;
+    padding: 7px 9px;
+  }
+
+  .center-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .legend {
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 10px;
+  }
+
+  .ask {
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .ask input {
+    font-size: 12px;
+    padding: 8px;
+  }
+
+  .chat {
+    max-height: 250px;
+    gap: 8px;
+    padding-right: 4px;
+  }
+
+  .bubble {
+    font-size: 12px;
+    padding: 8px 10px;
+    border-radius: 10px;
+  }
+
+  .compare-toggle {
+    font-size: 10.5px;
+    margin-bottom: 8px;
+  }
+
+  .suggests {
+    gap: 4px;
+    margin-top: 6px;
+  }
+
+  .suggest {
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+
+  .recall-card {
+    margin-top: 10px;
+    padding-top: 10px;
+  }
+
+  .recall-out {
+    max-height: 150px;
+    font-size: 10px;
+    padding: 9px;
+    margin-top: 8px;
+  }
+
+  .identity-row {
+    font-size: 10px;
+    gap: 5px;
+  }
+
+  .identity-row input {
+    flex: 0 1 100px;
+    font-size: 11px;
+    padding: 4px 6px;
+  }
+}
+
 /* ---------- phones ---------- */
 @media (max-width: 680px) {
   /* top bar wraps: brand on top, controls flow underneath */
