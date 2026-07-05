@@ -22,64 +22,15 @@
 
   <!-- MAIN LAYOUT: Sidebar + Content -->
   <div class="layout">
-    <!-- ICON SIDEBAR (Hover to reveal labels) -->
+    <!-- TEXT SIDEBAR NAVIGATION -->
     <aside class="sidebar">
-      <div class="sidebar-header">
-        <button class="sidebar-logo-btn" data-view="graph">◒</button>
-      </div>
-
       <nav class="sidebar-nav">
-        <!-- Feed -->
-        <button class="sidebar-item" data-view="feed" data-label="Feed">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-          </svg>
-        </button>
-
-        <!-- Memories -->
-        <button class="sidebar-item" data-view="memories" data-label="Memories">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-        </button>
-
-        <!-- Search -->
-        <button class="sidebar-item" data-view="search" data-label="Search">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"></circle>
-            <path d="m21 21-4.35-4.35"></path>
-          </svg>
-        </button>
-
-        <!-- Graph -->
-        <button class="sidebar-item active" data-view="graph" data-label="Graph">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="5" r="3"></circle>
-            <circle cx="6" cy="12" r="3"></circle>
-            <circle cx="18" cy="12" r="3"></circle>
-            <line x1="12" y1="8" x2="6" y2="10"></line>
-            <line x1="12" y1="8" x2="18" y2="10"></line>
-            <line x1="6" y1="15" x2="18" y2="15"></line>
-          </svg>
-        </button>
-
-        <!-- Ask -->
-        <button class="sidebar-item" data-view="ask" data-label="Ask">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
-        </button>
-
-        <!-- Settings -->
-        <button class="sidebar-item" data-view="settings" data-label="Settings">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6m-17.78 7.78l4.24-4.24m5.08-5.08l4.24-4.24"></path>
-          </svg>
-        </button>
+        <button class="nav-link" data-view="feed">FEED</button>
+        <button class="nav-link" data-view="memories">MEMORIES</button>
+        <button class="nav-link" data-view="search">SEARCH</button>
+        <button class="nav-link active" data-view="graph">GRAPH</button>
+        <button class="nav-link" data-view="ask">ASK</button>
+        <button class="nav-link" data-view="settings">SETTINGS</button>
       </nav>
     </aside>
 

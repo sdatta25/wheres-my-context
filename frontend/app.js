@@ -376,10 +376,10 @@ function switchView(viewName) {
   }
 
   // Update active button
-  document.querySelectorAll(".sidebar-item").forEach(btn => {
+  document.querySelectorAll(".nav-link").forEach(btn => {
     btn.classList.remove("active");
   });
-  document.querySelector(`[data-view="${viewName}"]`).classList.add("active");
+  document.querySelector(`.nav-link[data-view="${viewName}"]`).classList.add("active");
 
   // Initialize graph when viewing graph
   if (viewName === "graph" && !simulation) {
@@ -388,17 +388,12 @@ function switchView(viewName) {
 }
 
 function wire() {
-  // Navigation: sidebar buttons
-  document.querySelectorAll(".sidebar-item").forEach(btn => {
+  // Navigation: text nav links
+  document.querySelectorAll(".nav-link").forEach(btn => {
     btn.addEventListener("click", () => {
       const view = btn.dataset.view;
       switchView(view);
     });
-  });
-
-  // Logo button to graph view
-  document.querySelector(".sidebar-logo-btn").addEventListener("click", () => {
-    switchView("graph");
   });
 
   // Search functionality
