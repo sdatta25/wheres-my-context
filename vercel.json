@@ -11,6 +11,7 @@
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/index.py" },
     { "src": "/", "dest": "/frontend/index.html" },
+    { "src": "/(feed|memories|search|graph|ask|settings)", "dest": "/frontend/app.html" },
     { "src": "/(styles\\.css|app\\.js|favicon\\.ico)", "dest": "/frontend/$1" },
     { "src": "/(.*)", "dest": "/frontend/$1" }
   ]

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Where's My Context · AI memory that connects</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <!-- TOP NAV -->
+  <header class="topnav">
+    <div class="nav-left">
+      <span class="logo-text">WHERE'S MY CONTEXT</span>
+    </div>
+    <div class="nav-right">
+      <a href="#" class="nav-link">Docs</a>
+      <span id="engine-badge" class="badge" title="Active memory engine">…</span>
+    </div>
+  </header>
+
+  <!-- MAIN LAYOUT -->
+  <div class="layout">
+    <!-- MAIN CONTENT (Full width) -->
+    <main class="main-content">
+      <!-- FEED VIEW -->
+      <section id="feed-view" class="view-section hidden">
+        <div class="view-header">
+          <h2>Feed your brain</h2>
+        </div>
+        <div class="view-content">
+          <div class="identity-row">
+            <span>Adding as</span>
+            <input id="identity" type="text" placeholder="your name" maxlength="24" />
+            <span class="idhint">shared team brain</span>
+          </div>
+          <form id="add-form" class="add-form">
+            <textarea id="add-text" rows="3"
+              placeholder="Drop a note, decision, or fact…"></textarea>
+            <div class="form-row">
+              <select id="add-type">
+                <option value="decision">🧭 decision</option>
+                <option value="note" selected>📝 note</option>
+                <option value="fact">📌 fact</option>
+                <option value="doc">📄 doc</option>
+                <option value="code">💻 code</option>
+              </select>
+              <button type="submit" class="btn-primary">Remember</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- MEMORIES VIEW -->
+      <section id="memories-view" class="view-section hidden">
+        <div class="view-header">
+          <h2>Memories</h2>
+          <span id="mem-count" class="count-badge">0</span>
+        </div>
+        <div class="view-content">
+          <div id="mem-list" class="mem-list"></div>
+
+          <!-- Quick Add Memory Form -->
+          <div class="quick-add-section">
+            <h3>Add to memories</h3>
+            <form id="quick-add-form" class="add-form">
+              <textarea id="quick-add-text" rows="2" placeholder="Add a new memory…"></textarea>
+              <div class="form-row">
+                <select id="quick-add-type">
+                  <option value="note" selected>📝 note</option>
+                  <option value="decision">🧭 decision</option>
+                  <option value="fact">📌 fact</option>
+                  <option value="doc">📄 doc</option>
+                  <option value="code">💻 code</option>
+                </select>
+                <button type="submit" class="btn-primary">Add</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- SEARCH VIEW -->
+      <section id="search-view" class="view-section hidden">
+        <div class="view-header">
+          <h2>Search memories</h2>
+        </div>
+        <div class="view-content">
+          <input id="search-input" type="text" placeholder="Search across all memories…" class="search-input" />
+          <div id="search-results" class="search-results"></div>
+        </div>
+      </section>
+
+      <!-- GRAPH VIEW -->
+      <section id="graph-view" class="view-section">
+        <div class="view-header">
+          <h2>Knowledge graph</h2>
+          <div class="legend">
+            <span><i class="sw mem"></i> memory</span>
+            <span><i class="sw con"></i> concept</span>
+            <span><i class="sw per"></i> person</span>
+            <span class="hint">click a node to trace context</span>
+          </div>
+        </div>
+        <svg id="graph"></svg>
+        <div id="graph-empty" class="graph-empty hidden">No memories yet — add one in feed.</div>
+      </section>
+
+      <!-- ASK VIEW -->
+      <section id="ask-view" class="view-section hidden">
+        <div class="view-header">
+          <h2>Ask your memory</h2>
+        </div>
+        <div class="view-content">
+          <form id="ask-form" class="ask-form">
+            <input id="ask-input" type="text"
+              placeholder="Where's my context on…" />
+            <button type="submit" class="btn-primary">Ask</button>
+          </form>
+          <label class="compare-toggle">
+            <input type="checkbox" id="compare-toggle" />
+            <span>⚔️ Compare: <b>no-memory</b> vs <b>Cognee</b></span>
+          </label>
+          <div id="chat" class="chat"></div>
+        </div>
+      </section>
+
+      <!-- SETTINGS VIEW -->
+      <section id="settings-view" class="view-section hidden">
+        <div class="view-header">
+          <h2>Settings</h2>
+        </div>
+        <div class="view-content">
+          <div class="settings-section">
+            <h3>Project</h3>
+            <label class="proj-label">
+              <select id="project-select"></select>
+            </label>
+          </div>
+          <div class="settings-section">
+            <h3>AI Context Brief</h3>
+            <p class="section-desc">What context should an agent get on wake-up?</p>
+            <div class="form-row">
+              <input id="recall-task" type="text" placeholder="optional task" />
+              <button id="recall-btn" class="btn-accent">Recall</button>
+            </div>
+            <pre id="recall-out" class="recall-output hidden"></pre>
+          </div>
+          <div class="settings-section">
+            <h3>Actions</h3>
+            <div class="button-group">
+              <button id="seed-btn" class="btn-ghost">Seed Demo</button>
+              <button id="reset-btn" class="btn-ghost danger">Reset All</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- FLOATING NAVIGATION OVERLAY -->
+  <nav class="floating-nav">
+    <button class="nav-link" data-view="feed">FEED</button>
+    <button class="nav-link" data-view="memories">MEMORIES</button>
+    <button class="nav-link" data-view="search">SEARCH</button>
+    <button class="nav-link active" data-view="graph">GRAPH</button>
+    <button class="nav-link" data-view="ask">ASK</button>
+    <button class="nav-link" data-view="settings">SETTINGS</button>
+  </nav>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

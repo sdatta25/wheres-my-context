@@ -165,6 +165,21 @@ def index():
     return {"service": "wheres-my-context", "engine": engine.status()}
 
 
+APP_VIEWS = {"feed", "memories", "search", "graph", "ask", "settings"}
+
+
+@app.get("/{view}")
+def app_view(view: str):
+    if view in APP_VIEWS:
+        page = FRONTEND / "app.html"
+        if page.exists():
+            return FileResponse(page)
+    asset = FRONTEND / view
+    if asset.exists() and asset.is_file():
+        return FileResponse(asset)
+    return JSONResponse({"error": "not found"}, status_code=404)
+
+
 # Serve the SPA locally. On Vercel the frontend is served as static assets, so
 # guard this mount so importing the app never crashes if the dir isn't bundled.
 if FRONTEND.exists():

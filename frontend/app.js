@@ -417,7 +417,14 @@ async function refresh() {
   await Promise.all([loadMemories(), loadGraph()]);
 }
 
-function switchView(viewName) {
+const VIEWS = ["feed", "memories", "search", "graph", "ask", "settings"];
+
+function viewFromPath() {
+  const seg = location.pathname.replace(/^\/+|\/+$/g, "");
+  return VIEWS.includes(seg) ? seg : "graph";
+}
+
+function switchView(viewName, push = true) {
   // Hide all views
   document.querySelectorAll(".view-section").forEach(el => {
     el.classList.add("hidden");
@@ -435,11 +442,18 @@ function switchView(viewName) {
   });
   document.querySelector(`.floating-nav .nav-link[data-view="${viewName}"]`).classList.add("active");
 
-  // Initialize graph when viewing graph
-  if (viewName === "graph" && !simulation) {
-    initGraph();
+  // Update the URL so each view has its own page
+  if (push && location.pathname !== `/${viewName}`) {
+    history.pushState({ view: viewName }, "", `/${viewName}`);
+  }
+
+  // Redraw graph when returning to it (size may have been 0 while hidden)
+  if (viewName === "graph" && state.graph.nodes.length) {
+    drawGraph();
   }
 }
+
+window.addEventListener("popstate", () => switchView(viewFromPath(), false));
 
 function wire() {
   // Navigation: floating nav links
@@ -562,6 +576,7 @@ function wire() {
   renderIntro();
   initGraph();
   wire();
+  switchView(viewFromPath(), false);
   try {
     await refresh();
   } catch (e) {

@@ -3,173 +3,218 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Where's My Context · AI memory that connects</title>
+  <title>Where's My Context — AI memory that connects</title>
+  <meta name="description" content="Feed your team's brain. Ask questions. Get grounded answers backed by a live knowledge graph — powered by Cognee." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700;1,800&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: #000;
+      color: #fff;
+      font-family: "Inter", system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Dot grid — right side, like reference */
+    .dots {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 28vw;
+      height: 100vh;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.22) 1px, transparent 1px);
+      background-size: 34px 34px;
+      -webkit-mask-image: linear-gradient(to left, black 40%, transparent 100%);
+      mask-image: linear-gradient(to left, black 40%, transparent 100%);
+      pointer-events: none;
+    }
+
+    /* ---------- NAV ---------- */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 32px 48px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .logo {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: rgba(255, 255, 255, 0.45);
+      text-decoration: none;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .nav-actions a.docs {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.55);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .nav-actions a.docs:hover { color: #fff; }
+
+    .cta-pill {
+      font-size: 14px;
+      font-weight: 500;
+      color: #fff;
+      text-decoration: none;
+      padding: 10px 22px;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 999px;
+      transition: all 0.25s ease;
+      white-space: nowrap;
+    }
+
+    .cta-pill:hover {
+      background: #fff;
+      color: #000;
+      border-color: #fff;
+    }
+
+    /* ---------- HERO ---------- */
+    .hero {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 0 24px 60px;
+      position: relative;
+      z-index: 1;
+    }
+
+    h1 {
+      font-size: clamp(56px, 11vw, 150px);
+      font-weight: 800;
+      line-height: 0.98;
+      letter-spacing: -0.03em;
+    }
+
+    h1 .em {
+      font-style: italic;
+      font-weight: 800;
+    }
+
+    .sub {
+      margin-top: 40px;
+      max-width: 560px;
+      font-size: clamp(15px, 1.6vw, 19px);
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.55);
+    }
+
+    .hero-actions {
+      margin-top: 44px;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn-solid {
+      font-size: 15px;
+      font-weight: 600;
+      color: #000;
+      background: #fff;
+      text-decoration: none;
+      padding: 14px 32px;
+      border-radius: 999px;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    .btn-solid:hover { transform: translateY(-2px); opacity: 0.9; }
+
+    .btn-outline {
+      font-size: 15px;
+      font-weight: 500;
+      color: #fff;
+      text-decoration: none;
+      padding: 14px 32px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 999px;
+      transition: all 0.25s ease;
+    }
+
+    .btn-outline:hover { border-color: #fff; }
+
+    /* ---------- FOOTER ---------- */
+    footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 24px;
+      padding: 24px 48px;
+      position: relative;
+      z-index: 2;
+    }
+
+    footer a {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.35);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    footer a:hover { color: rgba(255, 255, 255, 0.7); }
+
+    @media (max-width: 640px) {
+      nav { padding: 24px; }
+      footer { padding: 20px 24px; }
+      .sub { margin-top: 28px; }
+      .hero-actions { margin-top: 36px; }
+    }
+  </style>
 </head>
 <body>
-  <!-- TOP NAV -->
-  <header class="topnav">
-    <div class="nav-left">
-      <span class="logo-text">WHERE'S MY CONTEXT</span>
+  <div class="dots"></div>
+
+  <nav>
+    <a class="logo" href="/">WHERE'S MY CONTEXT</a>
+    <div class="nav-actions">
+      <a class="docs" href="https://github.com/sdatta25/wheres-my-context" target="_blank" rel="noopener">Docs</a>
+      <a class="cta-pill" href="/graph">Open app &rarr;</a>
     </div>
-    <div class="nav-right">
-      <a href="#" class="nav-link">Docs</a>
-      <span id="engine-badge" class="badge" title="Active memory engine">…</span>
-    </div>
-  </header>
-
-  <!-- MAIN LAYOUT -->
-  <div class="layout">
-    <!-- MAIN CONTENT (Full width) -->
-    <main class="main-content">
-      <!-- FEED VIEW -->
-      <section id="feed-view" class="view-section hidden">
-        <div class="view-header">
-          <h2>Feed your brain</h2>
-        </div>
-        <div class="view-content">
-          <div class="identity-row">
-            <span>Adding as</span>
-            <input id="identity" type="text" placeholder="your name" maxlength="24" />
-            <span class="idhint">shared team brain</span>
-          </div>
-          <form id="add-form" class="add-form">
-            <textarea id="add-text" rows="3"
-              placeholder="Drop a note, decision, or fact…"></textarea>
-            <div class="form-row">
-              <select id="add-type">
-                <option value="decision">🧭 decision</option>
-                <option value="note" selected>📝 note</option>
-                <option value="fact">📌 fact</option>
-                <option value="doc">📄 doc</option>
-                <option value="code">💻 code</option>
-              </select>
-              <button type="submit" class="btn-primary">Remember</button>
-            </div>
-          </form>
-        </div>
-      </section>
-
-      <!-- MEMORIES VIEW -->
-      <section id="memories-view" class="view-section hidden">
-        <div class="view-header">
-          <h2>Memories</h2>
-          <span id="mem-count" class="count-badge">0</span>
-        </div>
-        <div class="view-content">
-          <div id="mem-list" class="mem-list"></div>
-
-          <!-- Quick Add Memory Form -->
-          <div class="quick-add-section">
-            <h3>Add to memories</h3>
-            <form id="quick-add-form" class="add-form">
-              <textarea id="quick-add-text" rows="2" placeholder="Add a new memory…"></textarea>
-              <div class="form-row">
-                <select id="quick-add-type">
-                  <option value="note" selected>📝 note</option>
-                  <option value="decision">🧭 decision</option>
-                  <option value="fact">📌 fact</option>
-                  <option value="doc">📄 doc</option>
-                  <option value="code">💻 code</option>
-                </select>
-                <button type="submit" class="btn-primary">Add</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </section>
-
-      <!-- SEARCH VIEW -->
-      <section id="search-view" class="view-section hidden">
-        <div class="view-header">
-          <h2>Search memories</h2>
-        </div>
-        <div class="view-content">
-          <input id="search-input" type="text" placeholder="Search across all memories…" class="search-input" />
-          <div id="search-results" class="search-results"></div>
-        </div>
-      </section>
-
-      <!-- GRAPH VIEW -->
-      <section id="graph-view" class="view-section">
-        <div class="view-header">
-          <h2>Knowledge graph</h2>
-          <div class="legend">
-            <span><i class="sw mem"></i> memory</span>
-            <span><i class="sw con"></i> concept</span>
-            <span><i class="sw per"></i> person</span>
-            <span class="hint">click a node to trace context</span>
-          </div>
-        </div>
-        <svg id="graph"></svg>
-        <div id="graph-empty" class="graph-empty hidden">No memories yet — add one in feed.</div>
-      </section>
-
-      <!-- ASK VIEW -->
-      <section id="ask-view" class="view-section hidden">
-        <div class="view-header">
-          <h2>Ask your memory</h2>
-        </div>
-        <div class="view-content">
-          <form id="ask-form" class="ask-form">
-            <input id="ask-input" type="text"
-              placeholder="Where's my context on…" />
-            <button type="submit" class="btn-primary">Ask</button>
-          </form>
-          <label class="compare-toggle">
-            <input type="checkbox" id="compare-toggle" />
-            <span>⚔️ Compare: <b>no-memory</b> vs <b>Cognee</b></span>
-          </label>
-          <div id="chat" class="chat"></div>
-        </div>
-      </section>
-
-      <!-- SETTINGS VIEW -->
-      <section id="settings-view" class="view-section hidden">
-        <div class="view-header">
-          <h2>Settings</h2>
-        </div>
-        <div class="view-content">
-          <div class="settings-section">
-            <h3>Project</h3>
-            <label class="proj-label">
-              <select id="project-select"></select>
-            </label>
-          </div>
-          <div class="settings-section">
-            <h3>AI Context Brief</h3>
-            <p class="section-desc">What context should an agent get on wake-up?</p>
-            <div class="form-row">
-              <input id="recall-task" type="text" placeholder="optional task" />
-              <button id="recall-btn" class="btn-accent">Recall</button>
-            </div>
-            <pre id="recall-out" class="recall-output hidden"></pre>
-          </div>
-          <div class="settings-section">
-            <h3>Actions</h3>
-            <div class="button-group">
-              <button id="seed-btn" class="btn-ghost">Seed Demo</button>
-              <button id="reset-btn" class="btn-ghost danger">Reset All</button>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-  </div>
-
-  <!-- FLOATING NAVIGATION OVERLAY -->
-  <nav class="floating-nav">
-    <button class="nav-link" data-view="feed">FEED</button>
-    <button class="nav-link" data-view="memories">MEMORIES</button>
-    <button class="nav-link" data-view="search">SEARCH</button>
-    <button class="nav-link active" data-view="graph">GRAPH</button>
-    <button class="nav-link" data-view="ask">ASK</button>
-    <button class="nav-link" data-view="settings">SETTINGS</button>
   </nav>
 
-  <script src="https://d3js.org/d3.v7.min.js"></script>
-  <script src="/app.js"></script>
+  <main class="hero">
+    <h1>
+      AI memory<br />
+      that connects<br />
+      <span class="em">in seconds.</span>
+    </h1>
+    <p class="sub">
+      Feed your team's brain. Ask questions. Get grounded answers backed by
+      a live knowledge graph &mdash; free, no account needed.
+    </p>
+    <div class="hero-actions">
+      <a class="btn-solid" href="/graph">Open the app &rarr;</a>
+      <a class="btn-outline" href="/ask">Ask your memory</a>
+    </div>
+  </main>
+
+  <footer>
+    <a href="https://github.com/sdatta25/wheres-my-context" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://www.cognee.ai" target="_blank" rel="noopener">Powered by Cognee</a>
+  </footer>
 </body>
 </html>
