@@ -105,27 +105,22 @@ body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
   display: flex;
   min-height: 0;
   gap: 0;
+  position: relative;
 }
 
-/* ---------- SIDEBAR (Text centered navigation) ---------- */
-.sidebar {
-  width: 200px;
-  background: linear-gradient(180deg, rgba(10, 14, 26, 0.8) 0%, rgba(15, 20, 36, 0.6) 50%, rgba(10, 14, 26, 0.8) 100%);
-  border-right: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  padding: 40px 20px;
-}
-
-.sidebar-nav {
+/* ---------- FLOATING NAVIGATION (Overlaid on content) ---------- */
+.floating-nav {
+  position: fixed;
+  right: 40px;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   flex-direction: column;
   gap: 24px;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  width: 100%;
+  z-index: 50;
+  pointer-events: all;
 }
 
 .nav-link {
@@ -140,13 +135,14 @@ body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
   transition: all 0.3s ease;
   position: relative;
   white-space: nowrap;
-  opacity: 0.7;
+  opacity: 0.6;
+  padding: 8px 0;
 }
 
 .nav-link:hover {
   opacity: 1;
   color: var(--accent);
-  transform: scale(1.05);
+  transform: translateX(-4px);
 }
 
 .nav-link.active {
@@ -158,11 +154,11 @@ body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 .nav-link.active::after {
   content: "";
   position: absolute;
-  bottom: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 20px;
-  height: 2px;
+  right: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 20px;
   background: var(--accent);
   border-radius: 1px;
 }

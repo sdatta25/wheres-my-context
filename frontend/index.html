@@ -20,21 +20,9 @@
     </div>
   </header>
 
-  <!-- MAIN LAYOUT: Sidebar + Content -->
+  <!-- MAIN LAYOUT -->
   <div class="layout">
-    <!-- TEXT SIDEBAR NAVIGATION -->
-    <aside class="sidebar">
-      <nav class="sidebar-nav">
-        <button class="nav-link" data-view="feed">FEED</button>
-        <button class="nav-link" data-view="memories">MEMORIES</button>
-        <button class="nav-link" data-view="search">SEARCH</button>
-        <button class="nav-link active" data-view="graph">GRAPH</button>
-        <button class="nav-link" data-view="ask">ASK</button>
-        <button class="nav-link" data-view="settings">SETTINGS</button>
-      </nav>
-    </aside>
-
-    <!-- MAIN CONTENT -->
+    <!-- MAIN CONTENT (Full width) -->
     <main class="main-content">
       <!-- FEED VIEW -->
       <section id="feed-view" class="view-section hidden">
@@ -152,6 +140,16 @@
       </section>
     </main>
   </div>
+
+  <!-- FLOATING NAVIGATION OVERLAY -->
+  <nav class="floating-nav">
+    <button class="nav-link" data-view="feed">FEED</button>
+    <button class="nav-link" data-view="memories">MEMORIES</button>
+    <button class="nav-link" data-view="search">SEARCH</button>
+    <button class="nav-link active" data-view="graph">GRAPH</button>
+    <button class="nav-link" data-view="ask">ASK</button>
+    <button class="nav-link" data-view="settings">SETTINGS</button>
+  </nav>
 
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script src="/app.js"></script>

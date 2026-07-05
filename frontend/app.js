@@ -375,11 +375,11 @@ function switchView(viewName) {
     viewEl.classList.remove("hidden");
   }
 
-  // Update active button
-  document.querySelectorAll(".nav-link").forEach(btn => {
+  // Update active button (in floating nav)
+  document.querySelectorAll(".floating-nav .nav-link").forEach(btn => {
     btn.classList.remove("active");
   });
-  document.querySelector(`.nav-link[data-view="${viewName}"]`).classList.add("active");
+  document.querySelector(`.floating-nav .nav-link[data-view="${viewName}"]`).classList.add("active");
 
   // Initialize graph when viewing graph
   if (viewName === "graph" && !simulation) {
@@ -388,8 +388,8 @@ function switchView(viewName) {
 }
 
 function wire() {
-  // Navigation: text nav links
-  document.querySelectorAll(".nav-link").forEach(btn => {
+  // Navigation: floating nav links
+  document.querySelectorAll(".floating-nav .nav-link").forEach(btn => {
     btn.addEventListener("click", () => {
       const view = btn.dataset.view;
       switchView(view);
