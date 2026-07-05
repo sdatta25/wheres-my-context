@@ -6,9 +6,9 @@
   --text: #ffffff;
   --muted: rgba(255, 255, 255, 0.5);
   --faint: rgba(255, 255, 255, 0.35);
-  --mem: #ffffff;
-  --con: #8a8a8a;
-  --per: #ffffff;
+  --mem: #4de1c1;
+  --con: #8b7cff;
+  --per: #ffb057;
   --danger: #ff6b7d;
   --radius: 14px;
 }
@@ -456,9 +456,9 @@ body::before {
   vertical-align: -1px;
 }
 
-.legend .sw.mem { background: transparent; border: 1.5px solid #fff; }
+.legend .sw.mem { background: var(--mem); }
 .legend .sw.con { background: var(--con); }
-.legend .sw.per { background: #fff; }
+.legend .sw.per { background: var(--per); }
 .legend .hint { font-style: italic; opacity: 0.7; }
 
 #graph {
@@ -684,19 +684,21 @@ input::placeholder, textarea::placeholder { color: var(--faint); }
 
 /* ---------- GRAPH NODES ---------- */
 .node-label {
-  font-size: 10px;
-  fill: rgba(255, 255, 255, 0.65);
+  font-size: 11px;
+  fill: rgba(255, 255, 255, 0.7);
   pointer-events: none;
   font-family: "Inter", sans-serif;
+  paint-order: stroke;
+  stroke: rgba(0, 0, 0, 0.85);
+  stroke-width: 3px;
 }
 
-.node-label.concept { fill: rgba(255, 255, 255, 0.75); font-weight: 500; }
-.node-label.person { fill: #ffffff; font-weight: 700; }
-.node-label.memory { fill: rgba(255, 255, 255, 0.45); }
+.node-label.concept { fill: #c3baff; font-weight: 500; }
+.node-label.person { fill: #ffc887; font-weight: 700; }
 
 .edge-label {
   font-size: 8px;
-  fill: rgba(255, 255, 255, 0.35);
+  fill: rgba(255, 255, 255, 0.28);
   pointer-events: none;
   font-family: "Inter", sans-serif;
   font-weight: 500;
@@ -704,8 +706,8 @@ input::placeholder, textarea::placeholder { color: var(--faint); }
   letter-spacing: 0.5px;
 }
 
-.link { stroke: rgba(255, 255, 255, 0.16); }
-.link.related { stroke: rgba(255, 255, 255, 0.1); stroke-dasharray: 3 3; }
+.link { stroke: rgba(255, 255, 255, 0.13); }
+.link.related { stroke: rgba(139, 124, 255, 0.18); stroke-dasharray: 3 3; }
 .node circle { cursor: pointer; transition: opacity 0.15s ease; }
 .dim { opacity: 0.1 !important; }
 

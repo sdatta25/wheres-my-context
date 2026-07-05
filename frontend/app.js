@@ -150,16 +150,16 @@ function drawGraph() {
     degree[t] = (degree[t] || 0) + 1;
   });
 
-  // Node colors — monochrome to match the landing page
+  // Node colors — vivid on black: mint memories, violet concepts, amber people
   const kindColor = {
-    memory:  "#000000",
-    concept: "#8a8a8a",
-    person:  "#ffffff",
+    memory:  "#4de1c1",
+    concept: "#8b7cff",
+    person:  "#ffb057",
   };
   const kindStroke = {
-    memory:  "#ffffff",
-    concept: "rgba(255,255,255,0.25)",
-    person:  "rgba(255,255,255,0.35)",
+    memory:  "rgba(77,225,193,0.35)",
+    concept: "rgba(139,124,255,0.35)",
+    person:  "rgba(255,176,87,0.45)",
   };
 
   const nodeRadius = (d) => {
@@ -175,24 +175,31 @@ function drawGraph() {
 
   nodeEnter.append("circle")
     .attr("r", nodeRadius)
-    .attr("fill", (d) => kindColor[d.kind] || "#8a8a8a")
-    .attr("stroke", (d) => kindStroke[d.kind] || "rgba(255,255,255,0.25)")
-    .attr("stroke-width", (d) => d.kind === "memory" ? 1.5 : 2)
+    .attr("fill", (d) => kindColor[d.kind] || "#8b7cff")
+    .attr("stroke", (d) => kindStroke[d.kind] || "rgba(139,124,255,0.35)")
+    .attr("stroke-width", 5)
     .on("click", (e, d) => { e.stopPropagation(); highlightNode(d.id); })
     .append("title").text((d) => d.label);
 
   nodeEnter.merge(nodeSel);
 
-  // Node labels — show all, but smaller for non-person
+  // Node labels — memories keep their text in the tooltip only; long
+  // sentences on the canvas were unreadable clutter.
+  const shortLabel = (d) => {
+    if (d.kind === "memory") return "";
+    const s = d.label || "";
+    return s.length > 18 ? s.slice(0, 17).trimEnd() + "…" : s;
+  };
+
   const labelSel = gLabel.selectAll("text").data(nodes, (d) => d.id);
   labelSel.exit().remove();
   labelSel.enter().append("text")
     .attr("class", (d) => "node-label " + d.kind)
-    .attr("font-size", (d) => d.kind === "person" ? "12px" : "10px")
-    .attr("font-weight", (d) => d.kind === "person" ? "700" : "400")
-    .attr("dx", (d) => nodeRadius(d) + 4)
+    .attr("font-size", (d) => d.kind === "person" ? "13px" : "11px")
+    .attr("font-weight", (d) => d.kind === "person" ? "700" : "500")
+    .attr("dx", (d) => nodeRadius(d) + 6)
     .attr("dy", 4)
-    .text((d) => d.label)
+    .text(shortLabel)
     .merge(labelSel);
 
   if (simulation) simulation.stop();
@@ -200,28 +207,32 @@ function drawGraph() {
   nodes.forEach((d, i) => { d._phase = (i / nodes.length) * Math.PI * 2; });
 
   let t = 0;
+  // Barely-there breathing motion — enough to feel alive, not enough to
+  // shove clusters into the walls.
   function driftForce() {
-    t += 0.003;
+    t += 0.004;
     nodes.forEach((d) => {
-      d.vx += Math.cos(t + d._phase) * 0.15;
-      d.vy += Math.sin(t + d._phase * 0.7) * 0.15;
+      d.vx += Math.cos(t + d._phase) * 0.04;
+      d.vy += Math.sin(t + d._phase * 0.7) * 0.04;
     });
   }
 
   simulation = d3
     .forceSimulation(nodes)
     .force("link", d3.forceLink(links).id((d) => d.id)
-      .distance((d) => d.kind === "related" ? 180 : 130)
-      .strength(0.25))
-    .force("charge", d3.forceManyBody()
-      .strength((d) => d.kind === "person" ? -600 : -250)
-      .distanceMax(600))
-    .force("center", d3.forceCenter(w / 2, h / 2).strength(0.04))
-    .force("collide", d3.forceCollide((d) => nodeRadius(d) + 30))
+      .distance((d) => d.kind === "related" ? 150 : 100)
+      .strength(0.45))
+    .force("charge", d3.forceManyBody().strength(-320).distanceMax(360))
+    .force("x", d3.forceX(w / 2).strength(0.09))
+    .force("y", d3.forceY(h / 2).strength(0.11))
+    .force("collide", d3.forceCollide((d) => nodeRadius(d) + 16).strength(0.9))
     .force("drift", driftForce)
     .alphaDecay(0)
-    .velocityDecay(0.6)
+    .velocityDecay(0.5)
     .on("tick", ticked);
+
+  // Once the layout settles, zoom to fit it neatly in view
+  setTimeout(fitToView, 900);
 
   svg.on("click", clearHighlight);
 
