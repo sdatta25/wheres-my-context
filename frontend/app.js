@@ -165,21 +165,18 @@ function drawGraph() {
 
   if (simulation) simulation.stop();
 
-  // Assign each node a unique phase offset for organic drifting
-  let t = 0;
+  // Give each node a unique phase so they don't all move in sync
   nodes.forEach((d, i) => {
     d._phase = (i / nodes.length) * Math.PI * 2;
-    d._orbitR = 20 + Math.random() * 30;
-    d._speed = 0.4 + Math.random() * 0.4;
   });
 
-  // Custom drift force — each node orbits a slowly-shifting point
-  function driftForce(alpha) {
-    t += 0.012;
+  let t = 0;
+  // Gentle breathing drift — tiny nudge per tick in a slow sine wave
+  function driftForce() {
+    t += 0.003;
     nodes.forEach((d) => {
-      const angle = t * d._speed + d._phase;
-      d.vx += Math.cos(angle) * d._orbitR * 0.012;
-      d.vy += Math.sin(angle) * d._orbitR * 0.012;
+      d.vx += Math.cos(t + d._phase) * 0.15;
+      d.vy += Math.sin(t + d._phase * 0.7) * 0.15;
     });
   }
 
@@ -188,12 +185,12 @@ function drawGraph() {
     .force("link", d3.forceLink(links).id((d) => d.id).distance((d) => (d.kind === "related" ? 70 : 50)).strength(0.6))
     .force("charge", d3.forceManyBody().strength(-80).distanceMax(300))
     .force("center", d3.forceCenter(w / 2, h / 2))
-    .force("x", d3.forceX(w / 2).strength(0.04))
-    .force("y", d3.forceY(h / 2).strength(0.04))
+    .force("x", d3.forceX(w / 2).strength(0.06))
+    .force("y", d3.forceY(h / 2).strength(0.06))
     .force("collide", d3.forceCollide(22))
     .force("drift", driftForce)
     .alphaDecay(0)
-    .velocityDecay(0.3)
+    .velocityDecay(0.55)
     .on("tick", ticked);
 
   svg.on("click", clearHighlight);
