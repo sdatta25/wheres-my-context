@@ -111,12 +111,12 @@ body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 /* ---------- FLOATING NAVIGATION (Overlaid on content) ---------- */
 .floating-nav {
   position: fixed;
-  right: 40px;
+  right: 20px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
   align-items: flex-end;
   justify-content: center;
   z-index: 50;
@@ -127,22 +127,22 @@ body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
   background: none;
   border: none;
   color: var(--text);
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
   text-transform: uppercase;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
   white-space: nowrap;
-  opacity: 0.6;
-  padding: 8px 0;
+  opacity: 0.5;
+  padding: 4px 0;
 }
 
 .nav-link:hover {
   opacity: 1;
   color: var(--accent);
-  transform: translateX(-4px);
+  transform: translateX(-2px);
 }
 
 .nav-link.active {
@@ -154,11 +154,11 @@ body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 .nav-link.active::after {
   content: "";
   position: absolute;
-  right: -12px;
+  right: -8px;
   top: 50%;
   transform: translateY(-50%);
   width: 2px;
-  height: 20px;
+  height: 12px;
   background: var(--accent);
   border-radius: 1px;
 }
@@ -325,6 +325,7 @@ body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
   flex-direction: column;
   gap: 16px;
   padding: 16px;
+  padding-right: 100px;
   overflow: hidden;
   position: relative;
 }
