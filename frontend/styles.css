@@ -147,6 +147,9 @@ button:active { transform: translateY(1px); }
 .node-label { font-size: 10px; fill: var(--text); pointer-events: none; font-family: "Inter", sans-serif; }
 .node-label.concept { fill: #c8c2ff; font-weight: 600; }
 .node-label.person { fill: var(--per); font-weight: 700; }
+
+.edge-label { font-size: 9px; fill: rgba(232, 236, 246, 0.6); pointer-events: none; font-family: "Inter", sans-serif; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+
 .link { stroke: rgba(140, 155, 210, 0.22); }
 .link.related { stroke: rgba(124, 108, 255, 0.28); stroke-dasharray: 3 3; }
 .node circle { cursor: pointer; transition: opacity .15s ease; }

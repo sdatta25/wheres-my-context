@@ -115,6 +115,19 @@ function drawGraph() {
     .attr("stroke-width", (d) => (d.kind === "related" ? 1 : 1.4))
     .merge(link);
 
+  // Add relationship labels on edges
+  const edgeLabels = gLink.selectAll(".edge-label").data(links, (d, i) => i);
+  edgeLabels.exit().remove();
+  edgeLabels
+    .enter()
+    .append("text")
+    .attr("class", "edge-label")
+    .attr("font-size", "9px")
+    .attr("fill", "rgba(232, 236, 246, 0.5)")
+    .attr("text-anchor", "middle")
+    .attr("pointer-events", "none")
+    .merge(edgeLabels);
+
   const node = gNode.selectAll("g.node").data(nodes, (d) => d.id);
   node.exit().remove();
   const nodeEnter = node
@@ -152,12 +165,12 @@ function drawGraph() {
   if (simulation) simulation.stop();
   simulation = d3
     .forceSimulation(nodes)
-    .force("link", d3.forceLink(links).id((d) => d.id).distance((d) => (d.kind === "related" ? 60 : 40)).strength(0.4))
-    .force("charge", d3.forceManyBody().strength(-110).distanceMax(240))
+    .force("link", d3.forceLink(links).id((d) => d.id).distance((d) => (d.kind === "related" ? 70 : 50)).strength(0.6))
+    .force("charge", d3.forceManyBody().strength(-80).distanceMax(300))
     .force("center", d3.forceCenter(w / 2, h / 2))
-    .force("x", d3.forceX(w / 2).strength(0.12))
-    .force("y", d3.forceY(h / 2).strength(0.12))
-    .force("collide", d3.forceCollide(18))
+    .force("x", d3.forceX(w / 2).strength(0.08))
+    .force("y", d3.forceY(h / 2).strength(0.08))
+    .force("collide", d3.forceCollide(22))
     .on("tick", ticked);
 
   svg.on("click", clearHighlight);
@@ -171,6 +184,13 @@ function drawGraph() {
     gLink.selectAll("line")
       .attr("x1", (d) => d.source.x).attr("y1", (d) => d.source.y)
       .attr("x2", (d) => d.target.x).attr("y2", (d) => d.target.y);
+
+    // Position edge labels at midpoint of links
+    gLink.selectAll(".edge-label")
+      .attr("x", (d) => (d.source.x + d.target.x) / 2)
+      .attr("y", (d) => (d.source.y + d.target.y) / 2)
+      .text((d) => d.label || "");
+
     gNode.selectAll("g.node").attr("transform", (d) => `translate(${d.x},${d.y})`);
     gLabel.selectAll("text").attr("x", (d) => d.x).attr("y", (d) => d.y);
   }
