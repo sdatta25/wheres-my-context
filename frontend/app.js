@@ -520,7 +520,8 @@ function wire() {
     const text = $("#add-text").value.trim();
     if (!text) return;
     const type = $("#add-type").value;
-    const project = state.project === "all" ? "atlas" : state.project;
+    const proj = $("#project-select").value || "all";
+    const project = proj === "all" ? "atlas" : proj;
     const author = idInput.value.trim() || "You";
     localStorage.setItem("wmc_author", author);
     try {
@@ -540,7 +541,8 @@ function wire() {
       const text = $("#quick-add-text").value.trim();
       if (!text) return;
       const type = $("#quick-add-type").value;
-      const project = state.project === "all" ? "atlas" : state.project;
+      const proj = $("#project-select").value || "all";
+      const project = proj === "all" ? "atlas" : proj;
       const author = idInput.value.trim() || "You";
       try {
         await api("/api/memories", { method: "POST", body: JSON.stringify({ text, type, project, author }) });
